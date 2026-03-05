@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { gastosIniciales } from './data/mockGastos';
 import { GastoCard } from './components/GastoCard';
+import { NuevoGastoForm } from './components/NuevoGastoForm'; // <-- Importamos el formulario
+import { useLocalStorage } from './hooks/useLocalStorage';
 import type { Gasto } from './types';
 
 function App() {
-  const [gastos, setGastos] = useState<Gasto[]>(gastosIniciales);
+  const [gastos, setGastos] = useLocalStorage<Gasto[]>('gastos-app-v1', gastosIniciales);
+  // Estado para controlar si mostramos o no el formulario
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const toggleGasto = (id: string) => {
     setGastos(gastosActuales => 
@@ -18,18 +22,22 @@ function App() {
     );
   };
 
-  // --- LÓGICA DE CÁLCULO ---
+  // Función que recibe el gasto nuevo desde el formulario y lo suma a la lista
+  const agregarNuevoGasto = (nuevoGasto: Gasto) => {
+    setGastos(gastosActuales => [...gastosActuales, nuevoGasto]);
+    setMostrarFormulario(false); // Cerramos el modal después de guardar
+  };
+
   const totalMensual = gastos.reduce((total, gasto) => total + gasto.monto, 0);
-  
   const totalPagado = gastos
     .filter(gasto => gasto.estado === 'pagado')
     .reduce((total, gasto) => total + gasto.monto, 0);
-    
   const totalPendiente = totalMensual - totalPagado;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 font-sans selection:bg-blue-200">
-      <div className="max-w-md mx-auto pt-6 pb-12">
+    // Agregamos "relative" acá para que el botón flotante se posicione bien
+    <div className="min-h-screen bg-gray-50 p-4 font-sans selection:bg-blue-200 relative pb-24">
+      <div className="max-w-md mx-auto pt-6">
         
         <header className="mb-6 flex justify-between items-end">
           <div>
@@ -38,7 +46,6 @@ function App() {
           </div>
         </header>
 
-        {/* --- NUEVO DASHBOARD RESUMEN --- */}
         <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-8">
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
@@ -86,6 +93,23 @@ function App() {
         </main>
         
       </div>
+
+      {/* --- BOTÓN FLOTANTE --- */}
+      <button 
+        onClick={() => setMostrarFormulario(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center text-3xl pb-1 hover:bg-blue-700 hover:scale-105 transition-all z-40 active:scale-95"
+      >
+        +
+      </button>
+
+      {/* --- MODAL DEL FORMULARIO --- */}
+      {mostrarFormulario && (
+        <NuevoGastoForm 
+          onGuardar={agregarNuevoGasto} 
+          onCancelar={() => setMostrarFormulario(false)} 
+        />
+      )}
+
     </div>
   );
 }
