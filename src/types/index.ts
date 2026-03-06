@@ -9,4 +9,5 @@ export interface Gasto {
     fechaVencimiento: string; // <-- Lo cambiamos a string
     estado: EstadoGasto;
     fechaPago?: string;       // <-- Lo cambiamos a string
+    detalles?: string;
 }

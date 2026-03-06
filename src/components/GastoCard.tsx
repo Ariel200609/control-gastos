@@ -58,6 +58,13 @@ export const GastoCard = ({ gasto, onToggle, onDelete }: Props) => {
           </span>
         </div>
       </div>
+
+      {/* NUEVO: Mostrar el ticket del supermercado si existe */}
+        {gasto.detalles && (
+          <div className="mt-2 text-[11px] leading-snug text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-200 dark:border-gray-700/50">
+            {gasto.detalles}
+          </div>
+        )}
       
       <div className="text-right flex flex-col items-end mr-10">
         <p className={`font-extrabold text-xl mb-1 transition-colors ${
