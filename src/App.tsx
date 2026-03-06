@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
 import { GastoCard } from './components/GastoCard';
 import { NuevoGastoForm } from './components/NuevoGastoForm';
-import { Login } from './components/login';
+import { Login } from './components/Auth';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { Gasto } from './types';
@@ -146,7 +146,7 @@ function App() {
   if (cargando) return <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center"><p className="text-gray-500 font-bold animate-pulse">Cargando tu panel...</p></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-[env(safe-area-inset-top)] font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-300">
       <Toaster position="top-center" />
 
       {/* Contenedor principal con padding bottom para que no tape la barra de navegación */}

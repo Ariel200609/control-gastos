@@ -8,14 +8,19 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate', // Se actualiza sola cuando hacés cambios
+      registerType: 'autoUpdate', // Se actualiza sola cuando hacés cambios,
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'Economía Hogar',
         short_name: 'EcoHogar', // El nombre cortito que aparece abajo del ícono en el celu
         description: 'Gestor inteligente de gastos familiares',
-        theme_color: '#2563eb', // Color de la barra superior del celular (azul)
-        background_color: '#ffffff', // Color de la pantalla de carga
+        theme_color: '#030712', // Color de la barra superior del celular (azul)
+        background_color: '#030712', // Color de la pantalla de carga
         display: 'standalone', // Esto oculta la barra de direcciones de Chrome (la hace parecer app nativa)
         icons: [
           {
