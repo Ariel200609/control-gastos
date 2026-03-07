@@ -1,1 +1,23 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* TU NUEVA IDENTIDAD VISUAL */
+  --color-eco-bosque: #2D6A4F;
+  --color-eco-menta: #74C69D;
+  --color-eco-fondo: #F8F9FA;
+  --color-eco-texto: #1B4332;
+  --color-eco-alerta: #FF7B00;
+}
+
+/* Le decimos al fondo de la app que use tu gris off-white por defecto */
+body {
+  background-color: var(--color-eco-fondo);
+  color: var(--color-eco-texto);
+}
+
+/* Y mantenemos el oscuro profundo para la noche */
+.dark body {
+  background-color: #030712; 
+  color: #f3f4f6;
+}

@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
+import { Plus, Download } from 'lucide-react';
+
+import { Login } from './components/Auth';
+import { Header } from './components/Header';
+import { DashboardResumen } from './components/DashboardResumen';
 import { GastoCard } from './components/GastoCard';
 import { NuevoGastoForm } from './components/NuevoGastoForm';
-import { Supermercado } from './components/Supermercado'; // <-- Importamos la vista nueva
-import { Login } from './components/Auth';
+import { Supermercado } from './components/Supermercado';
+import { NavegacionInferior } from './components/NavegacionInferior';
+import { MenuLateral } from './components/MenuLateral';
+import { ModalEliminar } from './components/ModalEliminar';
+import { Graficos } from './components/Graficos';
+import { ModalInvitacion } from './components/ModalInvitacion';
+import { ModalPresupuesto } from './components/ModalPresupuesto';
+import { Notas } from './components/Notas'; // NUEVO
+
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { Gasto } from './types';
@@ -14,14 +26,29 @@ const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', '
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [gastos, setGastos] = useState<Gasto[]>([]);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [cargando, setCargando] = useState(true);
+  
+  // Agregamos 'notas' a las vistas posibles
+  const [vistaActual, setVistaActual] = useState<'inicio' | 'historial' | 'super' | 'graficos' | 'notas'>('inicio');
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [gastoABorrar, setGastoABorrar] = useState<string | null>(null);
-
-  // NUEVO: Agregamos 'super' a los estados posibles
-  const [vistaActual, setVistaActual] = useState<'inicio' | 'historial' | 'super'>('inicio');
+  const [gastoAEditar, setGastoAEditar] = useState<Gasto | null>(null);
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [mostrarInvitacion, setMostrarInvitacion] = useState(false);
+  
+  const [mostrarModalPresupuesto, setMostrarModalPresupuesto] = useState(false);
+  const [limitePresupuesto, setLimitePresupuesto] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ecoHogar_presupuesto');
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+  
   const [mesFiltro, setMesFiltro] = useState(new Date().getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState(new Date().getFullYear());
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pagado' | 'pendiente'>('todos');
+  const [busqueda, setBusqueda] = useState('');
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -34,13 +61,8 @@ function App() {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    if (isDarkMode) { root.classList.add('dark'); localStorage.setItem('theme', 'dark'); } 
+    else { root.classList.remove('dark'); localStorage.setItem('theme', 'light'); }
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -49,9 +71,7 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (session) fetchGastos();
-  }, [session]);
+  useEffect(() => { if (session) fetchGastos(); }, [session]);
 
   const fetchGastos = async () => {
     try {
@@ -62,36 +82,47 @@ function App() {
     } catch (error) { toast.error('Error al cargar'); } finally { setCargando(false); }
   };
 
-  const agregarNuevoGasto = async (nuevoGasto: Gasto) => {
+  const guardarGasto = async (gastoGuardado: Gasto) => {
     try {
-      const { data, error } = await supabase.from('gastos').insert([{
-        titulo: nuevoGasto.titulo, monto: nuevoGasto.monto, categoria: nuevoGasto.categoria,
-        fechaVencimiento: nuevoGasto.fechaVencimiento, estado: 'pendiente'
-      }]).select();
-      if (error) throw error;
-      if (data) { setGastos([...gastos, data[0] as Gasto]); setMostrarFormulario(false); toast.success('Guardado'); }
+      if (gastoAEditar) {
+        const { error } = await supabase.from('gastos').update({
+          titulo: gastoGuardado.titulo,
+          monto: gastoGuardado.monto,
+          categoria: gastoGuardado.categoria,
+          fechaVencimiento: gastoGuardado.fechaVencimiento,
+          es_fijo: gastoGuardado.es_fijo
+        }).eq('id', gastoAEditar.id);
+        
+        if (error) throw error;
+        setGastos(gastos.map(g => g.id === gastoAEditar.id ? { ...g, ...gastoGuardado } : g));
+        toast.success('Gasto actualizado');
+      } else {
+        const { data, error } = await supabase.from('gastos').insert([{
+          titulo: gastoGuardado.titulo, 
+          monto: gastoGuardado.monto, 
+          categoria: gastoGuardado.categoria,
+          fechaVencimiento: gastoGuardado.fechaVencimiento, 
+          estado: 'pendiente',
+          es_fijo: gastoGuardado.es_fijo
+        }]).select();
+        
+        if (error) throw error;
+        if (data) { setGastos([...gastos, data[0] as Gasto]); toast.success('Gasto guardado'); }
+      }
+      setMostrarFormulario(false);
+      setGastoAEditar(null);
     } catch (error) { toast.error('Error al guardar'); }
   };
 
-  // NUEVO: La magia que conecta el supermercado con el inicio
   const handleCompraTerminada = async (monto: number, detalles: string) => {
     const fechaHoy = new Date().toISOString().split('T')[0];
     try {
       const { data, error } = await supabase.from('gastos').insert([{
-        titulo: 'Compra de Supermercado',
-        monto: monto,
-        categoria: 'Supermercado',
-        fechaVencimiento: fechaHoy,
-        estado: 'pagado', // Se anota automáticamente como pagado
-        detalles: detalles
+        titulo: 'Compra de Supermercado', monto: monto, categoria: 'Supermercado',
+        fechaVencimiento: fechaHoy, estado: 'pagado', detalles: detalles
       }]).select();
-
       if (error) throw error;
-      if (data) {
-        setGastos([...gastos, data[0] as Gasto]);
-        setVistaActual('inicio'); // Te mandamos al inicio para que veas el gasto
-        toast.success('¡Compra registrada con éxito!', { icon: '🛒' });
-      }
+      if (data) { setGastos([...gastos, data[0] as Gasto]); setVistaActual('inicio'); toast.success('¡Compra registrada!'); }
     } catch (error) { toast.error('Error al guardar el ticket'); }
   };
 
@@ -112,105 +143,130 @@ function App() {
     toast.success('Eliminado');
   };
 
-  const handleCerrarSesion = async () => await supabase.auth.signOut();
+  const guardarPresupuesto = (nuevoLimite: number) => {
+    setLimitePresupuesto(nuevoLimite);
+    localStorage.setItem('ecoHogar_presupuesto', nuevoLimite.toString());
+    setMostrarModalPresupuesto(false);
+    toast.success('Presupuesto actualizado 🎯');
+  };
 
   const mesActual = new Date().getMonth() + 1;
   const anioActual = new Date().getFullYear();
+  
   const gastosDelMes = gastos.filter(g => {
     const [year, month] = g.fechaVencimiento.split('-');
-    if (vistaActual === 'inicio') return parseInt(month) === mesActual && parseInt(year) === anioActual;
-    return parseInt(month) === mesFiltro && parseInt(year) === anioFiltro;
+    const coincideFecha = vistaActual === 'inicio' || vistaActual === 'graficos'
+      ? parseInt(month) === mesActual && parseInt(year) === anioActual
+      : parseInt(month) === mesFiltro && parseInt(year) === anioFiltro;
+    
+    if (!coincideFecha) return false;
+    if (vistaActual === 'historial') {
+      if (filtroEstado !== 'todos' && g.estado !== filtroEstado) return false;
+      if (busqueda.trim() && !g.titulo.toLowerCase().includes(busqueda.toLowerCase())) return false;
+    }
+    return true;
   });
 
   const totalMensual = gastosDelMes.reduce((total, gasto) => total + gasto.monto, 0);
   const totalPagado = gastosDelMes.filter(g => g.estado === 'pagado').reduce((total, gasto) => total + gasto.monto, 0);
   const totalPendiente = totalMensual - totalPagado;
 
+  const exportarAExcel = () => {
+    if (gastosDelMes.length === 0) { toast.error('No hay gastos para exportar este mes'); return; }
+    let csvContent = "Fecha Vencimiento,Título,Categoría,Monto,Estado,Detalles\n";
+    gastosDelMes.forEach(gasto => {
+      const titulo = `"${gasto.titulo.replace(/"/g, '""')}"`;
+      const detalles = gasto.detalles ? `"${gasto.detalles.replace(/"/g, '""')}"` : '""';
+      const estado = gasto.estado === 'pagado' ? 'Pagado' : 'Pendiente';
+      csvContent += `${gasto.fechaVencimiento},${titulo},${gasto.categoria},${gasto.monto},${estado},${detalles}\n`;
+    });
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `EcoHogar_${MESES[mesFiltro-1]}_${anioFiltro}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('¡Archivo Excel descargado! 📊');
+  };
+
   const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
   if (!session) return <Login />;
-  if (cargando) return <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center"><p className="text-gray-500 font-bold animate-pulse">Cargando...</p></div>;
+  if (cargando) return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-500 animate-pulse font-bold">Cargando...</p></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 pt-[env(safe-area-inset-top)] font-sans selection:bg-blue-200 dark:selection:bg-blue-900 transition-colors duration-300">
+    <div className="min-h-screen p-4 pt-[env(safe-area-inset-top)] font-sans selection:bg-eco-menta/30 transition-colors duration-300">
       <Toaster position="top-center" />
 
       <div className="max-w-md mx-auto pt-2 pb-32">
-        
-        <header className="mb-6 flex justify-between items-start">
-          <div>
-            <p className="text-blue-600 dark:text-blue-400 font-bold tracking-wide uppercase text-xs mb-1">
-              {vistaActual === 'inicio' && 'Resumen del Mes'}
-              {vistaActual === 'historial' && 'Tu Archivo'}
-              {vistaActual === 'super' && 'De Compras'}
-            </p>
-            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-              {vistaActual === 'inicio' ? `Hogar ${session.user.user_metadata?.hogar || ''}` : vistaActual === 'super' ? 'Lista de Super' : 'Historial'}
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 text-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-              {isDarkMode ? '🌞' : '🌙'}
-            </button>
-            <button onClick={handleCerrarSesion} className="text-sm font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all">Salir</button>
-          </div>
-        </header>
+        <Header vistaActual={vistaActual === 'graficos' ? 'inicio' : vistaActual} session={session} onOpenMenu={() => setMenuAbierto(true)} isDarkMode={isDarkMode} onToggleTheme={() => setIsDarkMode(!isDarkMode)} />
 
         <motion.div variants={containerVariants} initial="hidden" animate="show" key={vistaActual}>
+          {vistaActual === 'super' && <Supermercado onCompraTerminada={handleCompraTerminada} />}
+          {vistaActual === 'graficos' && <Graficos gastos={gastos} mesActual={mesActual} anioActual={anioActual} />}
           
-          {/* MODO SUPERMERCADO */}
-          {vistaActual === 'super' && (
-            <Supermercado onCompraTerminada={handleCompraTerminada} />
-          )}
+          {/* RENDERIZADO DE NOTAS */}
+          {vistaActual === 'notas' && <Notas />}
 
-          {/* VISTAS NORMALES (INICIO / HISTORIAL) */}
-          {vistaActual !== 'super' && (
+          {(vistaActual === 'inicio' || vistaActual === 'historial') && (
             <>
               {vistaActual === 'historial' && (
-                <motion.div variants={itemVariants} className="flex gap-2 mb-6">
-                  <select value={mesFiltro} onChange={(e) => setMesFiltro(Number(e.target.value))} className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white rounded-xl p-3 outline-none focus:border-blue-500 shadow-sm">
-                    {MESES.map((mes, index) => <option key={mes} value={index + 1}>{mes}</option>)}
-                  </select>
-                  <select value={anioFiltro} onChange={(e) => setAnioFiltro(Number(e.target.value))} className="w-28 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white rounded-xl p-3 outline-none focus:border-blue-500 shadow-sm">
-                    {[anioActual - 1, anioActual, anioActual + 1].map(anio => <option key={anio} value={anio}>{anio}</option>)}
-                  </select>
+                <motion.div variants={itemVariants} className="flex flex-col gap-3 mb-6">
+                  <div className="flex gap-2">
+                    <select value={mesFiltro} onChange={(e) => setMesFiltro(Number(e.target.value))} className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-eco-texto dark:text-white rounded-[16px] p-3 shadow-sm font-bold outline-none">
+                      {MESES.map((mes, index) => <option key={mes} value={index + 1}>{mes}</option>)}
+                    </select>
+                    <select value={anioFiltro} onChange={(e) => setAnioFiltro(Number(e.target.value))} className="w-28 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-eco-texto dark:text-white rounded-[16px] p-3 shadow-sm font-bold outline-none">
+                      {[anioActual - 1, anioActual, anioActual + 1].map(anio => <option key={anio} value={anio}>{anio}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="🔍 Buscar gasto..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-eco-texto dark:text-white rounded-[16px] p-3 shadow-sm font-medium outline-none focus:border-eco-bosque" />
+                    <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as any)} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-eco-texto dark:text-white rounded-[16px] p-3 shadow-sm font-bold outline-none focus:border-eco-bosque">
+                      <option value="todos">Todos</option><option value="pendiente">Pendientes</option><option value="pagado">Pagados</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end mt-1">
+                    <button onClick={exportarAExcel} className="flex items-center gap-2 text-sm font-bold text-eco-bosque dark:text-eco-menta bg-eco-bosque/10 dark:bg-eco-menta/10 px-4 py-2.5 rounded-[12px] hover:bg-eco-bosque/20 dark:hover:bg-eco-menta/20 transition-colors">
+                      <Download size={18} strokeWidth={2.5} /> Descargar Mes
+                    </button>
+                  </div>
                 </motion.div>
               )}
 
-              <motion.section variants={itemVariants} className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 mb-8 transition-colors duration-300">
-                <div className="mb-6">
-                  <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Pendiente de Pago</h2>
-                  <p className="text-4xl font-black text-gray-900 dark:text-white">${totalPendiente.toLocaleString('es-AR')}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Presupuesto</p>
-                    <p className="text-lg font-bold text-gray-800 dark:text-gray-200">${totalMensual.toLocaleString('es-AR')}</p>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-xl border border-green-100 dark:border-green-900/30">
-                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">Pagado</p>
-                    <p className="text-lg font-bold text-green-700 dark:text-green-500">${totalPagado.toLocaleString('es-AR')}</p>
-                  </div>
-                </div>
-              </motion.section>
+              <DashboardResumen 
+                totalPendiente={totalPendiente} 
+                totalMensual={totalMensual} 
+                totalPagado={totalPagado} 
+                limitePresupuesto={limitePresupuesto} 
+                onEditPresupuesto={() => setMostrarModalPresupuesto(true)}
+                variantes={itemVariants} 
+              />
 
               <motion.main variants={itemVariants}>
                 <div className="flex justify-between items-center mb-4 px-1">
-                  <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Obligaciones</h2>
-                  <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded-full">{gastosDelMes.length}</span>
+                  <h2 className="text-lg font-black text-eco-texto dark:text-gray-200">Obligaciones</h2>
+                  <span className="text-sm font-bold text-gray-500 bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full">{gastosDelMes.length}</span>
                 </div>
-                
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   {gastosDelMes.length === 0 ? (
-                    <div className="text-center mt-8 p-6 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-2xl">
-                      <p className="text-gray-400 dark:text-gray-500 font-medium mb-2">No hay gastos para este período.</p>
-                      <p className="text-4xl">🍃</p>
+                    <div className="text-center mt-8 p-6 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[24px]">
+                      <p className="text-gray-400 font-bold mb-2">No se encontraron gastos.</p><p className="text-4xl">🍃</p>
                     </div>
                   ) : (
                     <AnimatePresence mode='popLayout'>
                       {gastosDelMes.map((gasto) => (
-                        <GastoCard key={gasto.id} gasto={gasto} onToggle={() => toggleGasto(gasto.id)} onDelete={() => setGastoABorrar(gasto.id)} />
+                        <GastoCard 
+                          key={gasto.id} 
+                          gasto={gasto} 
+                          onToggle={() => toggleGasto(gasto.id)} 
+                          onDelete={() => setGastoABorrar(gasto.id)}
+                          onEdit={() => { setGastoAEditar(gasto); setMostrarFormulario(true); }}
+                        />
                       ))}
                     </AnimatePresence>
                   )}
@@ -221,46 +277,31 @@ function App() {
         </motion.div>
       </div>
 
-      {/* Ocultamos el botón + si estamos en el supermercado para no tapar la lista */}
-      {vistaActual !== 'super' && (
-        <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6, type: 'spring' }} onClick={() => setMostrarFormulario(true)} className="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center text-3xl pb-1 hover:bg-blue-700 hover:scale-105 transition-all z-40 active:scale-95">
-          +
+      {(vistaActual === 'inicio' || vistaActual === 'historial') && (
+        <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6, type: 'spring' }} onClick={() => { setGastoAEditar(null); setMostrarFormulario(true); }} className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-tr from-eco-bosque to-[#40916c] text-white rounded-full shadow-[0_8px_25px_rgba(45,106,79,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40">
+          <Plus size={32} strokeWidth={2.5} />
         </motion.button>
       )}
 
-      {/* --- BARRA DE NAVEGACIÓN INFERIOR (AHORA CON 3 BOTONES) --- */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center z-30">
-        <nav className="w-full max-w-md bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 flex justify-around items-center p-2 pb-6 sm:pb-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-none">
-          <button onClick={() => setVistaActual('inicio')} className={`flex flex-col items-center p-2 flex-1 transition-colors ${vistaActual === 'inicio' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-600'}`}>
-            <span className="text-2xl mb-1">🏠</span><span className="text-[10px] font-bold tracking-wide">INICIO</span>
-          </button>
-          
-          <button onClick={() => setVistaActual('super')} className={`flex flex-col items-center p-2 flex-1 transition-colors ${vistaActual === 'super' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-600'}`}>
-            <span className="text-2xl mb-1">🛒</span><span className="text-[10px] font-bold tracking-wide">SÚPER</span>
-          </button>
+      <NavegacionInferior vistaActual={vistaActual} setVistaActual={setVistaActual} />
 
-          <button onClick={() => setVistaActual('historial')} className={`flex flex-col items-center p-2 flex-1 transition-colors ${vistaActual === 'historial' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-600'}`}>
-            <span className="text-2xl mb-1">📅</span><span className="text-[10px] font-bold tracking-wide">HISTORIAL</span>
-          </button>
-        </nav>
-      </div>
+      {session && <MenuLateral abierto={menuAbierto} onClose={() => setMenuAbierto(false)} session={session} onCerrarSesion={async () => await supabase.auth.signOut()} onAbrirGraficos={() => setVistaActual('graficos')} onAbrirInvitacion={() => setMostrarInvitacion(true)} />}
+
+      <ModalInvitacion isOpen={mostrarInvitacion} onClose={() => setMostrarInvitacion(false)} nombreHogar={session?.user.user_metadata?.hogar || 'Error'} />
+
+      <ModalPresupuesto isOpen={mostrarModalPresupuesto} onClose={() => setMostrarModalPresupuesto(false)} limiteActual={limitePresupuesto} onSave={guardarPresupuesto} />
 
       <AnimatePresence>
-        {mostrarFormulario && <NuevoGastoForm onGuardar={agregarNuevoGasto} onCancelar={() => setMostrarFormulario(false)} />}
-        {gastoABorrar && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-            {/* Modal de confirmación de borrado */}
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-gray-900 rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center border dark:border-gray-800">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🗑️</div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Eliminar gasto?</h3>
-              <div className="flex gap-3 mt-6">
-                <button onClick={() => setGastoABorrar(null)} className="flex-1 py-3 rounded-xl font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800">Cancelar</button>
-                <button onClick={confirmarEliminacion} className="flex-1 py-3 rounded-xl font-bold text-white bg-red-500">Eliminar</button>
-              </div>
-            </motion.div>
-          </motion.div>
+        {mostrarFormulario && (
+          <NuevoGastoForm 
+            gastoAEditar={gastoAEditar}
+            onGuardar={guardarGasto} 
+            onCancelar={() => { setMostrarFormulario(false); setGastoAEditar(null); }} 
+          />
         )}
       </AnimatePresence>
+
+      <ModalEliminar isOpen={gastoABorrar !== null} onClose={() => setGastoABorrar(null)} onConfirm={confirmarEliminacion} />
     </div>
   );
 }
