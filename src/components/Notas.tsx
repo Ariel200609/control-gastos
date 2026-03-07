@@ -13,6 +13,19 @@ export const Notas = () => {
 
   useEffect(() => {
     fetchNotas();
+
+    // --- MAGIA EN TIEMPO REAL (WEBSOCKETS) PARA NOTAS ---
+    const canalNotas = supabase
+      .channel('eco-hogar-notas')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notas' }, () => {
+        fetchNotas(); // Si alguien agrega, tilda o borra una nota, recargamos la lista
+      })
+      .subscribe();
+
+    // Limpiamos la suscripción cuando el usuario sale de la pestaña de Notas
+    return () => {
+      supabase.removeChannel(canalNotas);
+    };
   }, []);
 
   const fetchNotas = async () => {
@@ -28,27 +41,34 @@ export const Notas = () => {
     const texto = nuevaNota.trim();
     setNuevaNota('');
 
-    const { data, error } = await supabase.from('notas').insert([{ 
+    // Inserción optimista para que se sienta súper rápido
+    const notaTemporal = { id: Date.now().toString(), texto, tipo: filtroActivo, completada: false };
+    setNotas(prev => [notaTemporal as Nota, ...prev]);
+
+    const { error } = await supabase.from('notas').insert([{ 
       texto, 
       tipo: filtroActivo,
       completada: false 
-    }]).select();
+    }]);
 
-    if (!error && data) {
-      setNotas([data[0] as Nota, ...notas]);
-    } else {
+    if (error) {
       toast.error('Error al guardar la nota');
+      fetchNotas(); // Revertimos si falla
     }
   };
 
   const toggleNota = async (id: string, completada: boolean) => {
+    // Actualización optimista
     setNotas(actuales => actuales.map(n => n.id === id ? { ...n, completada: !completada } : n));
-    await supabase.from('notas').update({ completada: !completada }).eq('id', id);
+    const { error } = await supabase.from('notas').update({ completada: !completada }).eq('id', id);
+    if (error) console.error("Error al tildar nota:", error);
   };
 
   const borrarNota = async (id: string) => {
+    // Actualización optimista
     setNotas(actuales => actuales.filter(n => n.id !== id));
-    await supabase.from('notas').delete().eq('id', id);
+    const { error } = await supabase.from('notas').delete().eq('id', id);
+    if (error) console.error("Error al borrar nota:", error);
   };
 
   const notasFiltradas = notas.filter(n => n.tipo === filtroActivo);

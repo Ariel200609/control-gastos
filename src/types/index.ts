@@ -22,3 +22,12 @@ export interface Nota {
     completada: boolean;
     created_at?: string;
 }
+
+export interface Ingreso {
+    id: string;
+    titulo: string;
+    monto: number;
+    fecha: string;
+    categoria: string;
+    cobrado: boolean;
+}
