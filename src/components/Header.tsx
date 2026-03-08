@@ -2,7 +2,7 @@ import { Menu, Sun, Moon } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
 interface Props {
-  vistaActual: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas';
+  vistaActual: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas' | 'admin';
   session: Session;
   onOpenMenu: () => void;
   isDarkMode: boolean;

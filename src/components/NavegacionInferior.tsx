@@ -1,8 +1,8 @@
 import { Home, ShoppingCart, CalendarDays, ListTodo } from 'lucide-react';
 
 interface Props {
-  vistaActual: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas';
-  setVistaActual: (vista: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas') => void;
+  vistaActual: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas' | 'admin';
+  setVistaActual: (v: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas' | 'admin') => void;
 }
 
 export const NavegacionInferior = ({ vistaActual, setVistaActual }: Props) => {
