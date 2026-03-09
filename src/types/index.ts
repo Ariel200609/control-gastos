@@ -19,6 +19,8 @@ export interface Gasto {
     fechaPago?: string;       
     detalles?: string;
     es_fijo?: boolean;
+    cuota_actual?: number;
+    cuotas_totales?: number;
 }
 
 export interface Nota {

@@ -31,3 +31,9 @@ body {
     scrollbar-width: none;
   }
 }
+
+html, body {
+  overflow-x: hidden; /* Corta de raíz cualquier cosa que se pase de ancho */
+  max-width: 100vw;
+  overscroll-behavior-y: none; /* Evita el efecto rebote molesto al hacer scroll rápido hacia arriba o abajo */
+}

@@ -1,142 +1,125 @@
-import { motion } from 'framer-motion';
-import { 
-  Trash2, 
-  Edit2, 
-  CheckCircle2, 
-  Circle, 
-  Repeat, 
-  AlertCircle, 
-  Clock 
-} from 'lucide-react';
-import type { Gasto } from '../types';
+import { motion } from "framer-motion";
+import { Check, Edit3, Trash2, Circle, Repeat } from "lucide-react";
+import type { Gasto } from "../types";
 
 interface Props {
   gasto: Gasto;
   onToggle: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  compacto?: boolean;
 }
 
-export const GastoCard = ({ gasto, onToggle, onDelete, onEdit }: Props) => {
-  const isPagado = gasto.estado === 'pagado';
-  const hoy = new Date().toISOString().split('T')[0];
+export const GastoCard = ({
+  gasto,
+  onToggle,
+  onDelete,
+  onEdit,
+  compacto = false,
+}: Props) => {
+  const estaPagado = gasto.estado === "pagado";
 
-  // Lógica de Urgencias Visuales
-  const esVencido = !isPagado && gasto.fechaVencimiento < hoy;
-  const venceHoy = !isPagado && gasto.fechaVencimiento === hoy;
+  const formatFecha = (fechaStr: string) => {
+    const [year, month, day] = fechaStr.split('-');
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+  };
 
-  // Formateo de fecha para mostrar (ej: 15 mar)
-  const [year, month, day] = gasto.fechaVencimiento.split('-');
-  const fechaFormateada = `${parseInt(day)} ${new Date(parseInt(year), parseInt(month) - 1).toLocaleString('es', { month: 'short' })}`;
+  const fechaFormateada = formatFecha(gasto.fechaVencimiento);
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className={`relative overflow-hidden bg-white dark:bg-gray-900 rounded-[20px] p-4 flex items-center gap-4 border transition-all shadow-sm ${
-        isPagado 
-          ? 'opacity-60 border-gray-100 dark:border-gray-800' 
-          : esVencido 
-            ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)] bg-red-50/10' 
-            : venceHoy 
-              ? 'border-orange-500/50 bg-orange-50/10' 
-              : 'border-gray-100 dark:border-gray-800'
-      }`}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className={`bg-white dark:bg-gray-900 border ${estaPagado ? "border-gray-100 dark:border-gray-800 opacity-60" : "border-gray-200 dark:border-gray-700 shadow-sm"} rounded-2xl flex items-center justify-between transition-all ${compacto ? "p-2" : "p-4"}`}
     >
-      {/* Etiqueta de Urgencia (Badge) */}
-      {(esVencido || venceHoy) && (
-        <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tighter shadow-sm z-10 ${
-          esVencido ? 'bg-red-500 text-white' : 'bg-orange-500 text-white'
-        }`}>
-          {esVencido ? <AlertCircle size={10} strokeWidth={3} /> : <Clock size={10} strokeWidth={3} />}
-          {esVencido ? 'Vencido' : 'Vence Hoy'}
-        </div>
-      )}
-
-      {/* Botón de Check / Estado */}
-      <button 
-        onClick={onToggle} 
-        className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-          isPagado 
-            ? 'bg-eco-menta/20 text-eco-bosque dark:text-eco-menta' 
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-        }`}
-      >
-        {isPagado ? <CheckCircle2 size={28} strokeWidth={2.5} /> : <Circle size={28} strokeWidth={2} />}
-      </button>
-
-      {/* Contenido Principal */}
-      <div className="flex-1 min-w-0 py-1">
-        <h3 className={`font-bold text-[17px] truncate transition-colors flex items-center gap-2 ${
-          isPagado 
-            ? 'text-gray-500 line-through decoration-2' 
-            : esVencido 
-              ? 'text-red-600 dark:text-red-400' 
-              : 'text-eco-texto dark:text-gray-100'
-        }`}>
-          {gasto.titulo}
-          
-          {/* Indicador de Gasto Fijo Animado */}
-          {gasto.es_fijo && (
-            <motion.div 
-              initial={{ rotate: -180, opacity: 0 }} 
-              animate={{ rotate: 0, opacity: 1 }} 
-              className="text-blue-500 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-md shadow-sm"
-              title="Gasto Mensual Fijo"
-            >
-              <Repeat size={12} strokeWidth={3} />
-            </motion.div>
+      <div className="flex items-center gap-3 overflow-hidden">
+        <button
+          onClick={onToggle}
+          className={`shrink-0 flex items-center justify-center rounded-xl transition-colors ${
+            compacto ? "w-10 h-10" : "w-12 h-12"
+          } ${
+            estaPagado
+              ? "bg-eco-menta/20 text-eco-bosque dark:text-eco-menta"
+              : "bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+          }`}
+        >
+          {estaPagado ? (
+            <Check size={compacto ? 20 : 24} strokeWidth={3} />
+          ) : (
+            <Circle size={compacto ? 20 : 24} strokeWidth={2.5} />
           )}
-        </h3>
+        </button>
 
-        <div className="flex items-center gap-2 mt-1 text-xs">
-          <span className="text-gray-500 font-medium uppercase tracking-tight">{gasto.categoria}</span>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
-          <span className={`px-2 py-0.5 rounded-md font-bold ${
-            isPagado 
-              ? 'bg-gray-100 dark:bg-gray-800 text-gray-500' 
-              : esVencido 
-                ? 'bg-red-500 text-white shadow-sm' 
-                : venceHoy
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-          }`}>
-            {isPagado ? `Pagado el ${fechaFormateada}` : esVencido ? `Venció el ${fechaFormateada}` : `Vence el ${fechaFormateada}`}
-          </span>
-        </div>
+        <div className="flex flex-col truncate">
+          <div className="flex items-center gap-2">
+            <h3
+              className={`${compacto ? "text-sm" : "text-base"} font-black text-gray-800 dark:text-gray-100 truncate ${estaPagado ? "line-through decoration-2 decoration-gray-300 dark:decoration-gray-600" : ""}`}
+            >
+              {gasto.titulo}
+            </h3>
+            
+            {/* ÍCONO GASTO FIJO */}
+            {gasto.es_fijo && (
+              <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-500 p-0.5 rounded-md flex shrink-0">
+                <Repeat size={12} strokeWidth={3} />
+              </div>
+            )}
 
-        {gasto.detalles && (
-          <div className="mt-2 text-[11px] leading-snug text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50 italic">
-            {gasto.detalles}
+            {/* PASTILLA DE CUOTAS */}
+            {gasto.cuotas_totales && gasto.cuotas_totales > 1 && (
+              <span className={`bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold rounded-md shrink-0 ${compacto ? "text-[8px] px-1 py-0.5" : "text-[10px] px-1.5 py-0.5"}`}>
+                Cuota {gasto.cuota_actual}/{gasto.cuotas_totales}
+              </span>
+            )}
           </div>
-        )}
+          
+          <div className="flex items-center gap-2 mt-1">
+            {!compacto && (
+              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                {gasto.categoria}
+              </span>
+            )}
+            {!compacto && (
+              <span className="text-gray-300 dark:text-gray-700">•</span>
+            )}
+            
+            <span
+              className={`font-bold ${compacto ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5"} rounded-full ${
+                estaPagado 
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-500" 
+                  : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+              }`}
+            >
+              {estaPagado ? `Pagado el ${fechaFormateada}` : `Vence el ${fechaFormateada}`}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Monto y Acciones */}
-      <div className="flex flex-col items-end gap-2 pl-2">
-        <span className={`font-black text-lg transition-colors ${
-          isPagado ? 'text-gray-400' : esVencido ? 'text-red-600' : 'text-eco-texto dark:text-white'
-        }`}>
-          ${gasto.monto.toLocaleString('es-AR')}
+      <div
+        className={`flex flex-col items-end shrink-0 ml-2 ${compacto ? "gap-0" : "gap-2"}`}
+      >
+        <span
+          className={`${compacto ? "text-sm" : "text-lg"} font-black ${estaPagado ? "text-gray-400" : "text-eco-texto dark:text-white"}`}
+        >
+          ${gasto.monto.toLocaleString("es-AR")}
         </span>
-        <div className="flex gap-1">
-          {!isPagado && (
-            <button 
-              onClick={onEdit} 
-              className="p-2 text-gray-300 hover:text-blue-500 transition-colors"
-              aria-label="Editar gasto"
-            >
-              <Edit2 size={18} strokeWidth={2.5} />
-            </button>
-          )}
-          <button 
-            onClick={onDelete} 
-            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-            aria-label="Eliminar gasto"
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onEdit}
+            className={`text-gray-400 hover:text-blue-500 transition-colors ${compacto ? "p-1" : "p-1.5"}`}
           >
-            <Trash2 size={18} strokeWidth={2.5} />
+            <Edit3 size={compacto ? 14 : 16} />
+          </button>
+          <button
+            onClick={onDelete}
+            className={`text-gray-400 hover:text-red-500 transition-colors ${compacto ? "p-1" : "p-1.5"}`}
+          >
+            <Trash2 size={compacto ? 14 : 16} />
           </button>
         </div>
       </div>
