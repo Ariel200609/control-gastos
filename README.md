@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# 🍃 Eco Hogar
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
 
-Currently, two official plugins are available:
+**Eco Hogar** es una aplicación web progresiva (PWA) orientada a dispositivos móviles para la gestión inteligente de finanzas personales y del hogar. Diseñada con un enfoque "Mobile-First", permite a los usuarios llevar un control exhaustivo de su patrimonio, gastos e ingresos en tiempo real.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Características Principales
 
-## React Compiler
+- 📊 **Dashboard Financiero:** Vista panorámica del patrimonio total, balance mensual y estado del presupuesto.
+- 🏦 **Bóveda de Ahorros:** Módulo dedicado para separar capital del flujo mensual y gestionar el patrimonio acumulado.
+- 🏷️ **Categorías Dinámicas:** Sistema de etiquetas personalizadas con selectores de color guardadas por usuario.
+- 🔁 **Gastos Fijos Automatizados:** Clonación automática de obligaciones mensuales (servicios, alquileres, etc.).
+- 🛒 **Módulo Supermercado:** Ingreso rápido de tickets de compra cotidianos.
+- 📈 **Análisis Visual:** Gráficos interactivos de distribución de gastos por categoría.
+- 👨‍👩‍👧 **Entorno Familiar:** Sistema de invitaciones para compartir y gestionar los números del hogar en conjunto.
+- 🔐 **Autenticación y Seguridad:** Gestión de sesiones y seguridad perimetral (RLS) gestionada a través de Supabase.
+- 🌙 **Dark Mode:** Soporte nativo para modo claro y oscuro adaptativo al sistema operativo.
+- 📄 **Exportación de Datos:** Generación de reportes en formato `.csv` (Excel).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Arquitectura y Stack Tecnológico
 
-## Expanding the ESLint configuration
+El proyecto está construido utilizando herramientas modernas para garantizar escalabilidad, rendimiento y una experiencia de usuario fluida:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend:** React + TypeScript (Vite)
+- **Estilos:** Tailwind CSS
+- **Animaciones:** Framer Motion
+- **Iconografía:** Lucide React
+- **Backend & Base de Datos:** Supabase (PostgreSQL)
+- **Deploy:** Vercel
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Instalación y Despliegue Local
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Si querés clonar el repositorio y correrlo en tu máquina local, seguí estos pasos:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/tu-usuario/eco-hogar.git](https://github.com/tu-usuario/eco-hogar.git)
+   cd eco-hogar
