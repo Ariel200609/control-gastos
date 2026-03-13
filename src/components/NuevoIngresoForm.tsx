@@ -1,81 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Save, TrendingUp } from 'lucide-react';
+import { TrendingUp, X } from 'lucide-react';
 import type { Ingreso } from '../types';
 
 interface Props {
+  ingresoAEditar?: Ingreso | null;
   onGuardar: (ingreso: Partial<Ingreso>) => void;
   onCancelar: () => void;
 }
 
-const CATEGORIAS = ['Quincena', 'Avance de Obra', 'Sueldo', 'Ventas', 'Changas', 'Otros'];
-
-export const NuevoIngresoForm = ({ onGuardar, onCancelar }: Props) => {
+export const NuevoIngresoForm = ({ ingresoAEditar, onGuardar, onCancelar }: Props) => {
   const [titulo, setTitulo] = useState('');
   const [monto, setMonto] = useState('');
-  const [categoria, setCategoria] = useState('Quincena');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+
+  // Si nos pasan un ingreso para editar, rellenamos los campos
+  useEffect(() => {
+    if (ingresoAEditar) {
+      setTitulo(ingresoAEditar.titulo);
+      setMonto(ingresoAEditar.monto.toString());
+      setFecha(ingresoAEditar.fecha);
+    }
+  }, [ingresoAEditar]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo || !monto || !categoria || !fecha) return;
-    
-    onGuardar({
-      titulo,
-      monto: Number(monto),
-      categoria,
-      fecha,
-      cobrado: true
-    });
+    if (!titulo || !monto) return;
+    onGuardar({ titulo, monto: Number(monto), fecha });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-end sm:items-center z-50 p-0 sm:p-4">
-      <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25 }} className="bg-white dark:bg-gray-900 w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 pb-12 sm:pb-6 shadow-2xl border dark:border-gray-800">
-        
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-black text-green-600 flex items-center gap-2">
-            <TrendingUp strokeWidth={3} /> Ingreso de Dinero
-          </h2>
-          <button onClick={onCancelar} className="p-2 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full hover:bg-gray-200 transition-colors">
-            <X size={20} strokeWidth={3} />
-          </button>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
+        <div className="bg-green-500 p-6 text-white flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+              <TrendingUp size={24} />
+            </div>
+            <h2 className="text-xl font-black">{ingresoAEditar ? 'Editar Ingreso' : 'Nuevo Ingreso'}</h2>
+          </div>
+          <button onClick={onCancelar} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"><X size={20} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pl-1">¿Qué se cobró?</label>
-            <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Pago de cliente, Certificado..." className="w-full bg-green-50/50 dark:bg-gray-800 border border-green-200 dark:border-gray-700 text-eco-texto dark:text-white rounded-[16px] p-4 outline-none focus:border-green-500 font-medium transition-all" required autoFocus />
+            <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Descripción del ingreso</label>
+            <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Sueldo, Venta de bici..." className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-green-500 rounded-2xl p-4 font-bold text-gray-800 dark:text-gray-100 outline-none transition-all" required />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pl-1">Monto ($)</label>
-              <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-green-50/50 dark:bg-gray-800 border border-green-200 dark:border-gray-700 text-green-700 dark:text-green-400 rounded-[16px] p-4 outline-none focus:border-green-500 font-black text-lg transition-all" required min="1" step="any" />
+          <div className="flex gap-4">
+            <div className="flex-[2]">
+              <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Monto</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
+                <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-green-500 rounded-2xl p-4 pl-8 font-black text-gray-800 dark:text-gray-100 outline-none transition-all" required min="0" step="0.01" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pl-1">Fecha</label>
-              <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full bg-green-50/50 dark:bg-gray-800 border border-green-200 dark:border-gray-700 text-eco-texto dark:text-white rounded-[16px] p-4 outline-none focus:border-green-500 font-medium transition-all" required />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pl-1">Categoría</label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIAS.map(cat => (
-                <button key={cat} type="button" onClick={() => setCategoria(cat)} className={`py-2 px-3 rounded-xl text-[11px] font-bold transition-all border ${categoria === cat ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50'}`}>
-                  {cat}
-                </button>
-              ))}
+            <div className="flex-1">
+              <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Fecha</label>
+              <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-green-500 rounded-2xl p-4 font-bold text-gray-800 dark:text-gray-100 outline-none transition-all" required />
             </div>
           </div>
 
-          <button type="submit" className="w-full mt-2 bg-green-600 text-white font-black py-4 rounded-[16px] shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center justify-center gap-2">
-            <Save size={24} strokeWidth={2.5} /> Guardar Ingreso
+          <button type="submit" className="w-full bg-green-500 text-white font-black text-lg p-4 rounded-2xl mt-2 hover:bg-green-600 active:scale-[0.98] transition-all shadow-lg shadow-green-500/30">
+            {ingresoAEditar ? 'Guardar Cambios' : 'Registrar Ingreso'}
           </button>
         </form>
-
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
