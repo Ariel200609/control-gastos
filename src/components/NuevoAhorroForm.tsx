@@ -39,7 +39,8 @@ export const NuevoAhorroForm = ({ ahorroAEditar, onGuardar, onCancelar }: Props)
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Monto ($)</label>
-              <input type="number" required min="0" step="0.01" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 font-bold outline-none focus:border-blue-500 transition-colors text-gray-800 dark:text-gray-200" />
+              {/* ACÁ ESTÁ EL INPUTMODE MÁGICO */}
+              <input type="number" inputMode="decimal" required min="0" step="0.01" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 font-bold outline-none focus:border-blue-500 transition-colors text-gray-800 dark:text-gray-200" />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Fecha</label>

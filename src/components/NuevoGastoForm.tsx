@@ -84,7 +84,7 @@ export const NuevoGastoForm = ({ gastoAEditar, categorias, onGuardar, onCancelar
                 <label className="text-xs font-bold tracking-wider text-gray-500 uppercase mb-2 block">Monto</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><DollarSign size={18} /></div>
-                  <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" step="0.01" min="0" className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 rounded-2xl pl-9 pr-3 py-3.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-black text-lg" required />
+                  <input type="number" inputMode="decimal" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" step="0.01" min="0" className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 rounded-2xl pl-9 pr-3 py-3.5 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-black text-lg" required />
                 </div>
               </div>
               <div>

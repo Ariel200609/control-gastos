@@ -1,22 +1,79 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <title>EcoHogar</title>
+    
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>control-gastos</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#2D6A4F" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/logo.svg">
+
+    <style>
+      body {
+        margin: 0;
+        background-color: #2D6A4F; /* Tu color original para evitar parpadeos blancos */
+      }
+      
+      .splash-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background: linear-gradient(135deg, #2D6A4F 0%, #1B4332 100%);
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      .splash-logo {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 24px;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        animation: latido 2s infinite ease-in-out;
+      }
+
+      .splash-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: -1px;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      }
+
+      /* Animación de latido (pulso) para el logo */
+      @keyframes latido {
+        0% { transform: scale(0.95); opacity: 0.9; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.9; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    
+    <div id="root">
+      <div class="splash-container">
+        <img src="/logo.svg" alt="Logo Eco Hogar" class="splash-logo" />
+        <h1 class="splash-title">EcoHogar</h1>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.tsx"></script>
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('PWA registrada'))
+            .catch(err => console.log('Error PWA', err));
+        });
+      }
+    </script>
   </body>
 </html>

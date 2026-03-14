@@ -53,7 +53,7 @@ export const NuevoIngresoForm = ({ ingresoAEditar, onGuardar, onCancelar }: Prop
               <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">Monto</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
-                <input type="number" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-green-500 rounded-2xl p-4 pl-8 font-black text-gray-800 dark:text-gray-100 outline-none transition-all" required min="0" step="0.01" />
+                <input type="number" inputMode="decimal" value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00" className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-green-500 rounded-2xl p-4 pl-8 font-black text-gray-800 dark:text-gray-100 outline-none transition-all" required min="0" step="0.01" />
               </div>
             </div>
             <div className="flex-1">
