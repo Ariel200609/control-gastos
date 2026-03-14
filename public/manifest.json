@@ -1,18 +1,49 @@
 {
+  "name": "Eco Hogar",
+  "short_name": "EcoHogar",
+  "description": "Control de Gastos e Ingresos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8835/8835064.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/8835/8835064.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Nuevo Gasto",
       "short_name": "Gasto",
       "description": "Cargar un nuevo gasto rápido",
       "url": "/?action=nuevo-gasto",
-      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+      "icons": [
+        { 
+          "src": "https://cdn-icons-png.flaticon.com/512/8835/8835064.png", 
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Lista del Súper",
       "short_name": "Súper",
       "description": "Ir directo a la lista de compras",
       "url": "/?action=super",
-      "icons": [{ "src": "/logo.svg", "sizes": "192x192" }]
+      "icons": [
+        { 
+          "src": "https://cdn-icons-png.flaticon.com/512/8835/8835064.png", 
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

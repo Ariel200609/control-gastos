@@ -23,7 +23,7 @@ import { SuperAdmin } from './components/SuperAdmin';
 import { AjustesCategorias } from './components/AjustesCategorias';
 import { MenuOrdenamiento, type TipoOrden } from './components/MenuOrdenamiento';
 import { PullToRefresh } from './components/PullToRefresh';
-import { SkeletonLoader } from './components/SkeletonLoader'; // <-- ACÁ ESTÁ EL NUEVO
+import { SkeletonLoader } from './components/SkeletonLoader';
 
 // LÓGICA EXTRACTADA
 import { supabase } from './lib/supabase';
@@ -62,17 +62,34 @@ function App() {
   const { gastos, ingresos, categorias, ahorros, cargando, guardarGasto, guardarIngreso, eliminarIngreso, guardarAhorro, eliminarAhorro, toggleGasto, eliminarGasto, setCategorias, fetchData } = useFinanzas(session);
   const { mesFiltro, setMesFiltro, anioFiltro, setAnioFiltro, filtroEstado, setFiltroEstado, categoriaActiva, setCategoriaActiva, busqueda, setBusqueda, ordenGastos, setOrdenGastos, vistaCompacta, setVistaCompacta, gastosFiltrados, ingresosFiltrados, mesActual, anioActual, totales } = useFiltros(gastos, ingresos, ahorros, vistaActual);
 
+  // 1. Efecto de Sesión
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
+  // 2. Efecto de Modo Oscuro
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDarkMode) { root.classList.add('dark'); localStorage.setItem('theme', 'dark'); } 
     else { root.classList.remove('dark'); localStorage.setItem('theme', 'light'); }
   }, [isDarkMode]);
+
+  // 🔥 3. NUEVO EFECTO: ESPÍA DE ATAJOS (SHORTCUTS PWA) 🔥
+  useEffect(() => {
+    // Leemos la URL para ver si el usuario entró por un atajo
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+
+    if (action === 'nuevo-gasto') {
+      setMostrarFormulario(true);
+      window.history.replaceState({}, '', '/'); // Limpiamos la URL
+    } else if (action === 'super') {
+      setVistaActual('super');
+      window.history.replaceState({}, '', '/'); // Limpiamos la URL
+    }
+  }, []);
 
   const handleGuardarGasto = async (gastoData: any) => {
     if (await guardarGasto(gastoData, gastoAEditar)) { setMostrarFormulario(false); setGastoAEditar(null); }
@@ -92,7 +109,6 @@ function App() {
 
   if (!session) return <Login />;
   
-  // 🔥 ACÁ REEMPLAZAMOS EL TEXTO FEO POR EL SKELETON 🔥
   if (cargando && gastos.length === 0) return <SkeletonLoader />;
 
   return (
