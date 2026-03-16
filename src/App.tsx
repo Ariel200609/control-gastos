@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
-import { Plus, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, PiggyBank, Download, X } from 'lucide-react';
 
 // COMPONENTES MODULARES
 import { Login } from './components/Auth';
@@ -60,6 +60,9 @@ function App() {
   const [limitePresupuesto, setLimitePresupuesto] = useState(() => Number(localStorage.getItem('ecoHogar_presupuesto') || 0));
   const [isDarkMode, setIsDarkMode] = useState(() => window.localStorage.getItem('theme') === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [mostrarBannerInstalar, setMostrarBannerInstalar] = useState(false);
+
   const { gastos, ingresos, categorias, ahorros, cargando, guardarGasto, guardarIngreso, eliminarIngreso, guardarAhorro, eliminarAhorro, toggleGasto, eliminarGasto, setCategorias, fetchData } = useFinanzas(session);
   const { mesFiltro, setMesFiltro, anioFiltro, setAnioFiltro, filtroEstado, setFiltroEstado, categoriaActiva, setCategoriaActiva, busqueda, setBusqueda, ordenGastos, setOrdenGastos, vistaCompacta, setVistaCompacta, gastosFiltrados, ingresosFiltrados, mesActual, anioActual, totales } = useFiltros(gastos, ingresos, ahorros, vistaActual);
 
@@ -86,6 +89,38 @@ function App() {
       window.history.replaceState({}, '', '/');
     }
   }, []);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setMostrarBannerInstalar(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setMostrarBannerInstalar(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    window.addEventListener('appinstalled', () => {
+      setMostrarBannerInstalar(false);
+      setDeferredPrompt(null);
+    });
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstalarClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt(); 
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setMostrarBannerInstalar(false); 
+    }
+    setDeferredPrompt(null);
+  };
 
   const handleGuardarGasto = async (gastoData: any) => {
     if (await guardarGasto(gastoData, gastoAEditar)) { setMostrarFormulario(false); setGastoAEditar(null); }
@@ -130,6 +165,47 @@ function App() {
         }}
       />
       
+      {/* 🔥 BANNER CON SWIPE-TO-DISMISS Y BOTÓN CERRAR 🔥 */}
+      <AnimatePresence>
+        {mostrarBannerInstalar && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -50 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(_, info) => {
+              // Si desliza hacia arriba (offset negativo), lo cerramos
+              if (info.offset.y < -20) {
+                setMostrarBannerInstalar(false);
+              }
+            }}
+            className="mb-4 bg-gradient-to-r from-eco-bosque to-eco-menta text-white p-4 rounded-2xl shadow-lg flex items-center justify-between cursor-grab active:cursor-grabbing"
+          >
+            <div className="flex flex-col pointer-events-none">
+              <span className="font-bold text-sm">Instalar Eco Hogar</span>
+              <span className="text-xs opacity-90">Deslizá para arriba para ocultar</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={handleInstalarClick}
+                className="bg-white/20 hover:bg-white/30 px-3 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-colors backdrop-blur-sm"
+              >
+                <Download size={16} /> Instalar
+              </button>
+              <button 
+                onClick={() => setMostrarBannerInstalar(false)}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <PullToRefresh onRefresh={async () => { await fetchData(); vibrar([30, 50, 30]); }}>
         <div className="max-w-md mx-auto pt-2 pb-32">
           <Header vistaActual={vistaActual} session={session} onOpenMenu={() => { vibrar(30); setMenuAbierto(true); }} isDarkMode={isDarkMode} onToggleTheme={() => { vibrar(30); setIsDarkMode(!isDarkMode); }} />
@@ -176,9 +252,7 @@ function App() {
       {session && <MenuLateral abierto={menuAbierto} onClose={() => setMenuAbierto(false)} session={session} onCerrarSesion={() => supabase.auth.signOut()} onAbrirGraficos={() => { vibrar(30); setVistaActual('graficos'); }} onAbrirAdmin={() => { vibrar(30); setVistaActual('admin'); }} onAbrirInvitacion={() => { vibrar(30); setMostrarInvitacion(true); }} onAbrirCategorias={() => { vibrar(30); setMostrarCategorias(true); }} />}
 
       <AnimatePresence>
-        {/* 🔥 ACÁ ESTÁ EL FIX: Le agregué el {mostrarCategorias && ...} adelante 🔥 */}
         {mostrarCategorias && <AjustesCategorias categorias={categorias} setCategorias={setCategorias} onClose={() => setMostrarCategorias(false)} />}
-        
         {mostrarMenuOrden && <MenuOrdenamiento ordenActual={ordenGastos as TipoOrden} setOrden={(o: TipoOrden) => setOrdenGastos(o)} vistaCompacta={vistaCompacta} setVistaCompacta={setVistaCompacta} onClose={() => setMostrarMenuOrden(false)} />}
         {mostrarBoveda && <ModalBoveda ahorros={ahorros} onClose={() => setMostrarBoveda(false)} onEdit={(a: Ahorro) => { setAhorroAEditar(a); setMostrarBoveda(false); setMostrarFormularioAhorro(true); }} onDelete={eliminarAhorro} />}
       </AnimatePresence>
