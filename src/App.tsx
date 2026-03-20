@@ -261,7 +261,7 @@ function App() {
       <ModalPresupuesto isOpen={mostrarModalPresupuesto} onClose={() => setMostrarModalPresupuesto(false)} limiteActual={limitePresupuesto} onSave={(l: number) => { setLimitePresupuesto(l); localStorage.setItem('ecoHogar_presupuesto', l.toString()); setMostrarModalPresupuesto(false); }} />
       
       <AnimatePresence>
-        {mostrarFormulario && <NuevoGastoForm gastoAEditar={gastoAEditar} categorias={categorias} onGuardar={handleGuardarGasto} onCancelar={() => { setMostrarFormulario(false); setGastoAEditar(null); }} />}
+        {mostrarFormulario && <NuevoGastoForm gastos={gastos} gastoAEditar={gastoAEditar} categorias={categorias} onGuardar={handleGuardarGasto} onCancelar={() => { setMostrarFormulario(false); setGastoAEditar(null); }} />}
         {mostrarFormularioIngreso && <NuevoIngresoForm ingresoAEditar={ingresoAEditar} onGuardar={(data: Partial<Ingreso>) => guardarIngreso(data, ingresoAEditar).then(success => { if(success) { setMostrarFormularioIngreso(false); setIngresoAEditar(null); setPestañaPrincipal('ingresos'); }})} onCancelar={() => { setMostrarFormularioIngreso(false); setIngresoAEditar(null); }} />}
         {mostrarFormularioAhorro && <NuevoAhorroForm ahorroAEditar={ahorroAEditar} onGuardar={handleGuardarAhorro} onCancelar={() => { setMostrarFormularioAhorro(false); setAhorroAEditar(null); }} />}
       </AnimatePresence>

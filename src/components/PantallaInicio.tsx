@@ -3,6 +3,7 @@ import { DashboardResumen } from './DashboardResumen';
 import { GastoCard } from './GastoCard';
 import { IngresoCard } from './IngresoCard';
 import { FiltroCategorias } from './FiltroCategorias';
+import { ItemDeslizable } from './ItemDeslizable'; // 🔥 ACÁ ESTÁ EL NUEVO SUPERPODER
 import type { Gasto, Ingreso } from '../types';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -105,7 +106,20 @@ export const PantallaInicio = ({
               <div className="text-center py-10 text-gray-400 font-bold border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">No hay gastos en este mes 🍃</div>
             ) : (
               gastosFiltrados.map((g: Gasto) => (
-                <GastoCard key={g.id} gasto={g} onToggle={() => toggleGasto(g.id)} onDelete={() => setGastoABorrar(g.id)} onEdit={() => { setGastoAEditar(g); setMostrarFormulario(true); }} compacto={vistaCompacta} />
+                // 🔥 ENVOLVEMOS EL GASTO PARA PODER DESLIZARLO
+                <ItemDeslizable 
+                  key={g.id} 
+                  onBorrar={() => setGastoABorrar(g.id)} 
+                  onCompletar={() => toggleGasto(g.id)}
+                >
+                  <GastoCard 
+                    gasto={g} 
+                    onToggle={() => toggleGasto(g.id)} 
+                    onDelete={() => setGastoABorrar(g.id)} 
+                    onEdit={() => { setGastoAEditar(g); setMostrarFormulario(true); }} 
+                    compacto={vistaCompacta} 
+                  />
+                </ItemDeslizable>
               ))
             )
           ) : (
@@ -113,7 +127,17 @@ export const PantallaInicio = ({
               <div className="text-center py-10 text-gray-400 font-bold border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">Aún no hay ingresos 📈</div>
             ) : (
               ingresosFiltrados.map((i: Ingreso) => (
-                <IngresoCard key={i.id} ingreso={i} onEdit={() => { setIngresoAEditar(i); setMostrarFormularioIngreso(true); }} onDelete={() => setIngresoABorrar(i.id)} />
+                // 🔥 ENVOLVEMOS EL INGRESO TAMBIÉN (Solo borrar hacia la izquierda)
+                <ItemDeslizable 
+                  key={i.id} 
+                  onBorrar={() => setIngresoABorrar(i.id)}
+                >
+                  <IngresoCard 
+                    ingreso={i} 
+                    onEdit={() => { setIngresoAEditar(i); setMostrarFormularioIngreso(true); }} 
+                    onDelete={() => setIngresoABorrar(i.id)} 
+                  />
+                </ItemDeslizable>
               ))
             )
           )}

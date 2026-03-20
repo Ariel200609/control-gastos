@@ -4,6 +4,7 @@ import { X, Calendar, DollarSign, Type, Repeat, CreditCard } from 'lucide-react'
 import type { Gasto, Categoria } from '../types';
 
 interface Props {
+  gastos: Gasto[];
   gastoAEditar?: Gasto | null;
   categorias: Categoria[];
   onGuardar: (gasto: any) => void;
