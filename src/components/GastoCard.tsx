@@ -30,20 +30,24 @@ export const GastoCard = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className={`bg-white dark:bg-gray-900 border ${estaPagado ? "border-gray-100 dark:border-gray-800 opacity-60" : "border-gray-200 dark:border-gray-700 shadow-sm"} rounded-2xl flex items-center justify-between transition-all ${compacto ? "p-2" : "p-4"}`}
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+      className={`glass-card shadow-premium rounded-2xl flex items-center justify-between transition-all duration-200 hover:shadow-premium-hover hover:-translate-y-0.5 border-l-accent ${
+        estaPagado 
+          ? "border-l-eco-menta/60 opacity-65" 
+          : "border-l-eco-alerta"
+      } ${compacto ? "p-2.5" : "p-4"}`}
     >
       <div className="flex items-center gap-3 overflow-hidden">
         <button
           onClick={onToggle}
-          className={`shrink-0 flex items-center justify-center rounded-xl transition-colors ${
+          className={`shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 ${
             compacto ? "w-10 h-10" : "w-12 h-12"
           } ${
             estaPagado
-              ? "bg-eco-menta/20 text-eco-bosque dark:text-eco-menta"
-              : "bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+              ? "bg-eco-menta/20 text-eco-bosque dark:text-eco-menta scale-95"
+              : "bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-eco-menta/10 hover:text-eco-bosque dark:hover:bg-eco-menta/10 dark:hover:text-eco-menta"
           }`}
         >
           {estaPagado ? (
@@ -56,7 +60,7 @@ export const GastoCard = ({
         <div className="flex flex-col truncate">
           <div className="flex items-center gap-2">
             <h3
-              className={`${compacto ? "text-sm" : "text-base"} font-black text-gray-800 dark:text-gray-100 truncate ${estaPagado ? "line-through decoration-2 decoration-gray-300 dark:decoration-gray-600" : ""}`}
+              className={`${compacto ? "text-sm" : "text-base"} font-black text-gray-800 dark:text-gray-100 truncate font-display ${estaPagado ? "line-through decoration-2 decoration-gray-300 dark:decoration-gray-600" : ""}`}
             >
               {gasto.titulo}
             </h3>
@@ -70,7 +74,7 @@ export const GastoCard = ({
 
             {/* PASTILLA DE CUOTAS */}
             {gasto.cuotas_totales && gasto.cuotas_totales > 1 && (
-              <span className={`bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold rounded-md shrink-0 ${compacto ? "text-[8px] px-1 py-0.5" : "text-[10px] px-1.5 py-0.5"}`}>
+              <span className={`bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold rounded-lg shrink-0 ${compacto ? "text-[8px] px-1 py-0.5" : "text-[10px] px-1.5 py-0.5"}`}>
                 Cuota {gasto.cuota_actual}/{gasto.cuotas_totales}
               </span>
             )}
@@ -89,8 +93,8 @@ export const GastoCard = ({
             <span
               className={`font-bold ${compacto ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5"} rounded-full ${
                 estaPagado 
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-500" 
-                  : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                  ? "bg-eco-menta/10 text-eco-bosque dark:text-eco-menta" 
+                  : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
               }`}
             >
               {estaPagado ? `Pagado el ${fechaFormateada}` : `Vence el ${fechaFormateada}`}
@@ -103,7 +107,7 @@ export const GastoCard = ({
         className={`flex flex-col items-end shrink-0 ml-2 ${compacto ? "gap-0" : "gap-2"}`}
       >
         <span
-          className={`${compacto ? "text-sm" : "text-lg"} font-black ${estaPagado ? "text-gray-400" : "text-eco-texto dark:text-white"}`}
+          className={`${compacto ? "text-sm" : "text-lg"} font-black font-display ${estaPagado ? "text-gray-400" : "text-eco-texto dark:text-white"}`}
         >
           ${gasto.monto.toLocaleString("es-AR")}
         </span>
@@ -111,13 +115,13 @@ export const GastoCard = ({
         <div className="flex items-center gap-1">
           <button
             onClick={onEdit}
-            className={`text-gray-400 hover:text-blue-500 transition-colors ${compacto ? "p-1" : "p-1.5"}`}
+            className={`text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all ${compacto ? "p-1" : "p-1.5"}`}
           >
             <Edit3 size={compacto ? 14 : 16} />
           </button>
           <button
             onClick={onDelete}
-            className={`text-gray-400 hover:text-red-500 transition-colors ${compacto ? "p-1" : "p-1.5"}`}
+            className={`text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all ${compacto ? "p-1" : "p-1.5"}`}
           >
             <Trash2 size={compacto ? 14 : 16} />
           </button>

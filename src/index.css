@@ -8,12 +8,19 @@
   --color-eco-fondo: #F8F9FA;
   --color-eco-texto: #1B4332;
   --color-eco-alerta: #FF7B00;
+
+  /* TIPOGRAFÍA PREMIUM */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'DM Sans', 'Inter', system-ui, sans-serif;
 }
 
 /* Le decimos al fondo de la app que use tu gris off-white por defecto */
 body {
   background-color: var(--color-eco-fondo);
   color: var(--color-eco-texto);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Y mantenemos el oscuro profundo para la noche */
@@ -30,10 +37,104 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* TIPOGRAFÍA DISPLAY para títulos */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* GLASS CARD - Efecto glassmorphism sutil */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .dark .glass-card {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid rgba(55, 65, 81, 0.5);
+  }
+
+  /* SOMBRA PREMIUM */
+  .shadow-premium {
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+  .shadow-premium-hover {
+    box-shadow: 
+      0 4px 6px rgba(0, 0, 0, 0.04),
+      0 10px 24px rgba(0, 0, 0, 0.1);
+  }
+  .dark .shadow-premium {
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* BORDE INDICADOR LATERAL (para GastoCard) */
+  .border-l-accent {
+    border-left: 3px solid;
+  }
+}
+
+/* ANIMACIÓN SHIMMER para skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(
+    90deg, 
+    rgba(229, 231, 235, 0.3) 25%, 
+    rgba(229, 231, 235, 0.7) 50%, 
+    rgba(229, 231, 235, 0.3) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+}
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg, 
+    rgba(55, 65, 81, 0.3) 25%, 
+    rgba(55, 65, 81, 0.7) 50%, 
+    rgba(55, 65, 81, 0.3) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+}
+
+/* ANIMACIÓN BREATHING para la tarjeta principal */
+@keyframes breathing {
+  0%, 100% { opacity: 0.08; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.05); }
+}
+.animate-breathing {
+  animation: breathing 4s infinite ease-in-out;
+}
+
+/* ANIMACIÓN PROGRESS GLOW para barras de progreso */
+@keyframes progress-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.animate-progress-glow {
+  animation: progress-glow 2s infinite ease-in-out;
 }
 
 html, body {
   overflow-x: hidden; /* Corta de raíz cualquier cosa que se pase de ancho */
   max-width: 100vw;
   overscroll-behavior-y: none; /* Evita el efecto rebote molesto al hacer scroll rápido hacia arriba o abajo */
+  scroll-behavior: smooth;
+}
+
+/* Mejorar inputs en modo oscuro */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Transiciones suaves globales para elementos interactivos */
+button, a, input, select {
+  transition: all 0.2s ease;
 }

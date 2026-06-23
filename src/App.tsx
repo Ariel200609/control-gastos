@@ -147,7 +147,7 @@ function App() {
   if (cargando && gastos.length === 0) return <SkeletonLoader />;
 
   return (
-    <div className="min-h-screen p-4 pt-[env(safe-area-inset-top)] font-sans selection:bg-eco-menta/30 transition-colors duration-300 bg-eco-fondo dark:bg-gray-950">
+    <div className="min-h-screen p-4 pt-[env(safe-area-inset-top)] selection:bg-eco-menta/30 transition-colors duration-300 bg-eco-fondo dark:bg-gray-950">
       <Toaster 
         position="top-center" 
         toastOptions={{
