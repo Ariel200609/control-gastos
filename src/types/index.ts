@@ -13,7 +13,7 @@ export interface Gasto {
     id: string;
     titulo: string;
     monto: number;
-    categoria: string; // <-- 2. Ahora es 'string' para aceptar las que cree el usuario
+    categoria: string;
     fechaVencimiento: string; 
     estado: EstadoGasto;
     fechaPago?: string;       
@@ -21,6 +21,8 @@ export interface Gasto {
     es_fijo?: boolean;
     cuota_actual?: number;
     cuotas_totales?: number;
+    created_by_name?: string;
+    created_by_avatar?: string;
 }
 
 export interface Nota {

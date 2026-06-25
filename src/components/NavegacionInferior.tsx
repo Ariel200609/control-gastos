@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 interface Props {
   vistaActual: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas' | 'admin';
   setVistaActual: (v: 'inicio' | 'historial' | 'super' | 'graficos' | 'notas' | 'admin') => void;
+  urgentCount?: number;
 }
 
 const tabs = [
@@ -13,7 +14,7 @@ const tabs = [
   { id: 'historial' as const, label: 'HISTORIAL', icon: CalendarDays },
 ];
 
-export const NavegacionInferior = ({ vistaActual, setVistaActual }: Props) => {
+export const NavegacionInferior = ({ vistaActual, setVistaActual, urgentCount = 0 }: Props) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 flex justify-center z-30">
       <nav className="w-full max-w-md bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-800/50 flex justify-around items-center p-2 pb-6 sm:pb-4">
@@ -42,6 +43,11 @@ export const NavegacionInferior = ({ vistaActual, setVistaActual }: Props) => {
                   strokeWidth={isActive ? 2.5 : 1.8} 
                   style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)' }}
                 />
+                {tab.id === 'inicio' && urgentCount > 0 && (
+                  <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-sm">
+                    {urgentCount > 9 ? '9+' : urgentCount}
+                  </span>
+                )}
               </div>
               <span className={`text-[10px] font-bold transition-all duration-200 ${isActive ? 'tracking-wider' : ''}`}>
                 {tab.label}

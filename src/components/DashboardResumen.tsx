@@ -7,6 +7,7 @@ import {
   PiggyBank,
   Sparkles,
 } from "lucide-react";
+import CountUp from "react-countup";
 
 interface Props {
   totalPendiente: number;
@@ -19,7 +20,8 @@ interface Props {
   onAbrirBoveda: () => void;
   variantes: any;
   totalAhorrosGlobal: number;
-  saldoBilletera: number; // <-- Nueva prop para el saldo histórico total
+  saldoBilletera: number;
+  variacionMensual?: number;
 }
 
 export const DashboardResumen = ({
@@ -32,7 +34,8 @@ export const DashboardResumen = ({
   onAbrirBoveda,
   variantes,
   totalAhorrosGlobal,
-  saldoBilletera, // <-- Lo recibimos acá
+  saldoBilletera,
+  variacionMensual = 0,
 }: Props) => {
   const porcentajeUso =
     limitePresupuesto > 0 ? (totalMensual / limitePresupuesto) * 100 : 0;
@@ -59,14 +62,21 @@ export const DashboardResumen = ({
           </div>
         </div>
         <p className="text-4xl font-black mt-3 relative z-10 tracking-tight font-display">
-          $
-          {saldoBilletera.toLocaleString("es-AR", {
-            minimumFractionDigits: 2,
-          })}
+          $<CountUp start={0} end={saldoBilletera} duration={1.2} separator="." decimals={2} decimal="," />
         </p>
         <p className="text-xs text-green-200/70 mt-1.5 relative z-10 font-medium">
           Ingresos − Gastos − Bóveda
         </p>
+        {variacionMensual !== 0 && (
+          <div className={`relative z-10 mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold ${
+            variacionMensual > 0 
+              ? 'bg-red-500/20 text-red-200' 
+              : 'bg-green-500/20 text-green-200'
+          }`}>
+            {variacionMensual > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            {variacionMensual > 0 ? '+' : ''}{variacionMensual}% vs. mes anterior
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -81,7 +91,7 @@ export const DashboardResumen = ({
             </span>
           </div>
           <p className="text-lg font-black text-gray-800 dark:text-gray-100 font-display">
-            ${totalIngresos.toLocaleString("es-AR")}
+            $<CountUp start={0} end={totalIngresos} duration={1} separator="." />
           </p>
         </div>
 
@@ -96,16 +106,16 @@ export const DashboardResumen = ({
             </span>
           </div>
           <p className="text-lg font-black text-gray-800 dark:text-gray-100 font-display">
-            ${totalMensual.toLocaleString("es-AR")}
+            $<CountUp start={0} end={totalMensual} duration={1} separator="." />
           </p>
           <div className="flex flex-col gap-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
             <div className="flex justify-between items-center text-[10px] font-bold text-gray-400">
               <span>Pagado:</span>
-              <span>${totalPagado.toLocaleString("es-AR")}</span>
+              <span>$<CountUp start={0} end={totalPagado} duration={1} separator="." /></span>
             </div>
             <div className="flex justify-between items-center text-[10px] font-bold text-red-400">
               <span>Pendiente:</span>
-              <span>${totalPendiente.toLocaleString("es-AR")}</span>
+              <span>$<CountUp start={0} end={totalPendiente} duration={1} separator="." /></span>
             </div>
           </div>
         </div>
@@ -126,7 +136,7 @@ export const DashboardResumen = ({
             <PiggyBank size={16} /> Fondo de Ahorro
           </p>
           <p className="text-2xl font-black font-display text-blue-700 dark:text-blue-300 mt-1">
-            ${totalAhorrosGlobal.toLocaleString("es-AR")}
+            $<CountUp start={0} end={totalAhorrosGlobal} duration={1.2} separator="." />
           </p>
         </div>
         <div className="relative z-10 bg-blue-50 dark:bg-blue-900/20 text-blue-500 p-2 rounded-xl">

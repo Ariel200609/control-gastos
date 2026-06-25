@@ -14,26 +14,38 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'gstatic-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } }
+          }
+        ]
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'Economía Hogar',
-        short_name: 'EcoHogar', // El nombre cortito que aparece abajo del ícono en el celu
+        short_name: 'EcoHogar',
         description: 'Gestor inteligente de gastos familiares',
-        theme_color: '#10b981', // Color de la barra superior del celular (azul)
-        background_color: '#f8fafc', // Color de la pantalla de carga
-        display: 'standalone', // Esto oculta la barra de direcciones de Chrome (la hace parecer app nativa)
-        orientation: 'portrait', // Solo funciona en modo standalone, fuerza a que la app siempre esté vertical
+        theme_color: '#10b981',
+        background_color: '#f8fafc',
+        display: 'standalone',
+        orientation: 'portrait',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image1/png'
+            type: 'image/png'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image2/png',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]

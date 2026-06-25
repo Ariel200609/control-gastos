@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { PieChart as PieIcon, TrendingUp } from 'lucide-react';
-import type { Gasto, Ingreso } from '../types'; // <-- 1. Importamos Ingreso
+import { ResumenAnual } from './ResumenAnual';
+import type { Gasto, Ingreso } from '../types';
 
 interface Props {
   gastos: Gasto[];
@@ -70,13 +71,13 @@ export const Graficos = ({ gastos, ingresos = [], mesActual, anioActual }: Props
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pb-10">
       
       {/* SECCIÓN 1: BALANCE GENERAL */}
-      <div className="bg-white dark:bg-gray-900 rounded-[24px] p-6 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
+      <div className="glass-card shadow-premium rounded-[24px] p-6 mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-500 rounded-xl flex items-center justify-center">
             <TrendingUp size={20} strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className="text-lg font-black text-eco-texto dark:text-white leading-tight">Balance Mensual</h2>
+            <h2 className="text-lg font-black font-display text-eco-texto dark:text-white leading-tight">Balance Mensual</h2>
             <p className="text-xs text-gray-400 font-medium">Ingresos vs Gastos</p>
           </div>
         </div>
@@ -92,8 +93,11 @@ export const Graficos = ({ gastos, ingresos = [], mesActual, anioActual }: Props
         </div>
       </div>
 
-      {/* SECCIÓN 2: DISTRIBUCIÓN DE GASTOS */}
-      <div className="bg-white dark:bg-gray-900 rounded-[24px] p-6 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
+      {/* SECCIÓN 2: TENDENCIA DE 6 MESES */}
+      <ResumenAnual gastos={gastos} ingresos={ingresos} mesActual={mesActual} anioActual={anioActual} />
+
+      {/* SECCIÓN 3: DISTRIBUCIÓN DE GASTOS */}
+      <div className="glass-card shadow-premium rounded-[24px] p-6 mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center">
             <PieIcon size={20} strokeWidth={2.5} /> {/* <-- Bug del ícono arreglado acá */}

@@ -85,32 +85,66 @@ export const useFiltros = (gastos: Gasto[], ingresos: Ingreso[], ahorros: Ahorro
       }
 
       // Si está pendiente, solo lo restamos si vence este mes o en un mes anterior
-      // (porque es plata que ya deberías haber pagado o tenés que pagar ya)
       if (gastoYear < anioActual || (gastoYear === anioActual && gastoMonth <= mesActual)) {
         return total + (gasto.monto || 0);
       }
       
-      // Si es una cuota a futuro (ej: vence el mes que viene), NO la restamos hoy
+      // Si es una cuota a futuro, NO la restamos hoy
       return total;
     }, 0);
 
     const saldoBilletera = totalIngresosGlobal - totalGastosGlobal - totalAhorrosGlobal;
 
+    // Comparación vs. mes anterior
+    const mesAnteriorNum = mesActual === 1 ? 12 : mesActual - 1;
+    const anioMesAnterior = mesActual === 1 ? anioActual - 1 : anioActual;
+    const totalMesAnterior = gastos
+      .filter(g => {
+        const [y, m] = g.fechaVencimiento.split('-');
+        return parseInt(m, 10) === mesAnteriorNum && parseInt(y, 10) === anioMesAnterior;
+      })
+      .reduce((t, g) => t + g.monto, 0);
+
+    const variacionMensual = totalMesAnterior > 0 
+      ? Math.round(((totalMensual - totalMesAnterior) / totalMesAnterior) * 100) 
+      : 0;
+
     return {
       totalMensual, totalPagado, totalPendiente, totalIngresosMes, totalAhorrosMes,
-      totalAhorrosGlobal, saldoBilletera
+      totalAhorrosGlobal, saldoBilletera, totalMesAnterior, variacionMensual
     };
   }, [gastosFiltrados, ingresosFiltrados, ahorrosFiltrados, ahorros, ingresos, gastos, mesActual, anioActual]);
 
-  // ACÁ ESTABA EL ERROR: TE HABÍA PASADO ESTO INCOMPLETO
+  // 4. GASTOS PRÓXIMOS A VENCER (para alertas)
+  const gastosProximos = useMemo(() => {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
+    const pasadoManana = new Date(hoy);
+    pasadoManana.setDate(pasadoManana.getDate() + 2);
+
+    return gastos
+      .filter(g => {
+        if (g.estado === 'pagado') return false;
+        const [y, m, d] = g.fechaVencimiento.split('-');
+        const fechaVenc = new Date(Number(y), Number(m) - 1, Number(d));
+        fechaVenc.setHours(0, 0, 0, 0);
+        // Vencidos, vence hoy, o vence mañana
+        return fechaVenc.getTime() <= pasadoManana.getTime();
+      })
+      .sort((a, b) => new Date(a.fechaVencimiento).getTime() - new Date(b.fechaVencimiento).getTime());
+  }, [gastos]);
+
   return {
     mesFiltro, setMesFiltro, anioFiltro, setAnioFiltro,
     filtroEstado, setFiltroEstado, categoriaActiva, setCategoriaActiva,
     busqueda, setBusqueda, ordenGastos, setOrdenGastos,
     vistaCompacta, setVistaCompacta,
     gastosFiltrados, 
-    ingresosFiltrados, // <-- ¡AHORA SÍ!
-    ahorrosFiltrados,  // <-- ¡ESTE TAMBIÉN!
+    ingresosFiltrados,
+    ahorrosFiltrados,
+    gastosProximos,
     mesActual, anioActual, totales
   };
 };

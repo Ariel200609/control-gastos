@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast } from 'react-hot-toast';
-import { Plus, TrendingUp, TrendingDown, PiggyBank, Download, X } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, PiggyBank, Download, X, WifiOff } from 'lucide-react';
 
 // COMPONENTES MODULARES
 import { Login } from './components/Auth';
@@ -15,7 +15,6 @@ import { Supermercado } from './components/Supermercado';
 import { NavegacionInferior } from './components/NavegacionInferior';
 import { MenuLateral } from './components/MenuLateral';
 import { ModalEliminar } from './components/ModalEliminar';
-import { Graficos } from './components/Graficos';
 import { ModalInvitacion } from './components/ModalInvitacion';
 import { ModalPresupuesto } from './components/ModalPresupuesto';
 import { Notas } from './components/Notas';
@@ -24,11 +23,17 @@ import { AjustesCategorias } from './components/AjustesCategorias';
 import { MenuOrdenamiento, type TipoOrden } from './components/MenuOrdenamiento';
 import { PullToRefresh } from './components/PullToRefresh';
 import { SkeletonLoader } from './components/SkeletonLoader';
+import { AlertaVencimientos } from './components/AlertaVencimientos';
+
+// LAZY LOAD: Gráficos (recharts es pesado)
+const Graficos = lazy(() => import('./components/Graficos').then(m => ({ default: m.Graficos })));
 
 // LÓGICA Y UTILIDADES
 import { supabase } from './lib/supabase';
 import { useFinanzas } from './hooks/useFinanzas';
 import { useFiltros } from './hooks/useFiltros'; 
+import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { festejarAhorro } from './utils/confetti';
 import { vibrar } from './utils/haptics'; 
 import type { Session } from '@supabase/supabase-js';
 import type { Gasto, Ahorro, Ingreso } from './types';
@@ -63,8 +68,10 @@ function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [mostrarBannerInstalar, setMostrarBannerInstalar] = useState(false);
 
+  const isOnline = useOnlineStatus();
+
   const { gastos, ingresos, categorias, ahorros, cargando, guardarGasto, guardarIngreso, eliminarIngreso, guardarAhorro, eliminarAhorro, toggleGasto, eliminarGasto, setCategorias, fetchData } = useFinanzas(session);
-  const { mesFiltro, setMesFiltro, anioFiltro, setAnioFiltro, filtroEstado, setFiltroEstado, categoriaActiva, setCategoriaActiva, busqueda, setBusqueda, ordenGastos, setOrdenGastos, vistaCompacta, setVistaCompacta, gastosFiltrados, ingresosFiltrados, mesActual, anioActual, totales } = useFiltros(gastos, ingresos, ahorros, vistaActual);
+  const { mesFiltro, setMesFiltro, anioFiltro, setAnioFiltro, filtroEstado, setFiltroEstado, categoriaActiva, setCategoriaActiva, busqueda, setBusqueda, ordenGastos, setOrdenGastos, vistaCompacta, setVistaCompacta, gastosFiltrados, ingresosFiltrados, gastosProximos, mesActual, anioActual, totales } = useFiltros(gastos, ingresos, ahorros, vistaActual);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -127,7 +134,11 @@ function App() {
   };
 
   const handleGuardarAhorro = async (ahorroData: any) => {
-    if (await guardarAhorro(ahorroData, ahorroAEditar)) { setMostrarFormularioAhorro(false); setAhorroAEditar(null); }
+    if (await guardarAhorro(ahorroData, ahorroAEditar)) { 
+      festejarAhorro();
+      setMostrarFormularioAhorro(false); 
+      setAhorroAEditar(null); 
+    }
   };
 
   const exportarAExcel = () => {
@@ -142,6 +153,16 @@ function App() {
     vibrar(20); 
     setPestañaPrincipal(pestaña);
   };
+
+  // Contar gastos urgentes (vencidos + vencen hoy)
+  const urgentCount = gastosProximos.filter(g => {
+    const [y, m, d] = g.fechaVencimiento.split('-');
+    const fecha = new Date(Number(y), Number(m) - 1, Number(d));
+    fecha.setHours(0, 0, 0, 0);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return fecha.getTime() <= hoy.getTime();
+  }).length;
 
   if (!session) return <Login />;
   if (cargando && gastos.length === 0) return <SkeletonLoader />;
@@ -164,8 +185,21 @@ function App() {
           error: { iconTheme: { primary: '#ef4444', secondary: '#ffffff' } },
         }}
       />
+
+      {/* Banner Offline */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="mb-4 bg-gray-800 text-white p-3 rounded-2xl flex items-center gap-3 shadow-lg"
+          >
+            <WifiOff size={18} className="text-amber-400 shrink-0" />
+            <span className="text-sm font-bold">Sin conexión — Los cambios se sincronizarán al volver</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {/* 🔥 BANNER CON SWIPE-TO-DISMISS Y BOTÓN CERRAR 🔥 */}
+      {/* Banner Instalar PWA */}
       <AnimatePresence>
         {mostrarBannerInstalar && (
           <motion.div 
@@ -176,7 +210,6 @@ function App() {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}
             onDragEnd={(_, info) => {
-              // Si desliza hacia arriba (offset negativo), lo cerramos
               if (info.offset.y < -20) {
                 setMostrarBannerInstalar(false);
               }
@@ -212,20 +245,34 @@ function App() {
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={vistaActual}>
             {vistaActual === 'super' && <Supermercado onCompraTerminada={() => {}} />}
-            {vistaActual === 'graficos' && <Graficos gastos={gastos} ingresos={ingresos} mesActual={mesActual} anioActual={anioActual} />}
+            {vistaActual === 'graficos' && (
+              <Suspense fallback={<div className="text-center py-20 text-gray-400 font-bold animate-pulse">Cargando gráficos...</div>}>
+                <Graficos gastos={gastos} ingresos={ingresos} mesActual={mesActual} anioActual={anioActual} />
+              </Suspense>
+            )}
             {vistaActual === 'notas' && <Notas />}
             {vistaActual === 'admin' && <SuperAdmin />}
 
             {(vistaActual === 'inicio' || vistaActual === 'historial') && (
-              <PantallaInicio
-                vistaActual={vistaActual} pestañaPrincipal={pestañaPrincipal} setPestañaPrincipal={cambiarPestaña}
-                mesFiltro={mesFiltro} setMesFiltro={setMesFiltro} anioFiltro={anioFiltro} setAnioFiltro={setAnioFiltro} anioActual={anioActual}
-                categoriaActiva={categoriaActiva} setCategoriaActiva={setCategoriaActiva} busqueda={busqueda} setBusqueda={setBusqueda} filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado} exportarAExcel={exportarAExcel}
-                totales={totales} limitePresupuesto={limitePresupuesto} onEditPresupuesto={() => { vibrar(30); setMostrarModalPresupuesto(true); }} onAbrirBoveda={() => { vibrar(40); setMostrarBoveda(true); }}
-                setMostrarMenuOrden={setMostrarMenuOrden} vistaCompacta={vistaCompacta}
-                gastosFiltrados={gastosFiltrados} toggleGasto={(id: string) => { vibrar(20); toggleGasto(id); }} setGastoABorrar={setGastoABorrar} setGastoAEditar={setGastoAEditar} setMostrarFormulario={setMostrarFormulario}
-                ingresosFiltrados={ingresosFiltrados} setIngresoAEditar={setIngresoAEditar} setMostrarFormularioIngreso={setMostrarFormularioIngreso} setIngresoABorrar={setIngresoABorrar}
-              />
+              <>
+                {/* Alertas de vencimiento (solo en inicio) */}
+                {vistaActual === 'inicio' && (
+                  <AlertaVencimientos 
+                    gastosProximos={gastosProximos} 
+                    onVerGasto={(g) => { setGastoAEditar(g); setMostrarFormulario(true); }} 
+                  />
+                )}
+                <PantallaInicio
+                  vistaActual={vistaActual} pestañaPrincipal={pestañaPrincipal} setPestañaPrincipal={cambiarPestaña}
+                  mesFiltro={mesFiltro} setMesFiltro={setMesFiltro} anioFiltro={anioFiltro} setAnioFiltro={setAnioFiltro} anioActual={anioActual}
+                  categoriaActiva={categoriaActiva} setCategoriaActiva={setCategoriaActiva} busqueda={busqueda} setBusqueda={setBusqueda} filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado} exportarAExcel={exportarAExcel}
+                  totales={totales} limitePresupuesto={limitePresupuesto} onEditPresupuesto={() => { vibrar(30); setMostrarModalPresupuesto(true); }} onAbrirBoveda={() => { vibrar(40); setMostrarBoveda(true); }}
+                  setMostrarMenuOrden={setMostrarMenuOrden} vistaCompacta={vistaCompacta}
+                  gastosFiltrados={gastosFiltrados} toggleGasto={(id: string) => { vibrar(20); toggleGasto(id); }} setGastoABorrar={setGastoABorrar} setGastoAEditar={setGastoAEditar} setMostrarFormulario={setMostrarFormulario}
+                  onDuplicateGasto={(g: Gasto) => { vibrar(30); guardarGasto({ titulo: `${g.titulo} (copia)`, monto: g.monto, categoria: g.categoria, fechaVencimiento: new Date().toISOString().split('T')[0], es_fijo: false }, null); toast.success('Gasto duplicado 📋'); }}
+                  ingresosFiltrados={ingresosFiltrados} setIngresoAEditar={setIngresoAEditar} setMostrarFormularioIngreso={setMostrarFormularioIngreso} setIngresoABorrar={setIngresoABorrar}
+                />
+              </>
             )}
           </motion.div>
         </div>
@@ -247,7 +294,7 @@ function App() {
       )}
       <AnimatePresence>{menuFabAbierto && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMenuFabAbierto(false)} className="fixed inset-0 bg-black/20 z-30" />}</AnimatePresence>
       
-      <NavegacionInferior vistaActual={vistaActual} setVistaActual={(v: any) => { vibrar(20); setVistaActual(v); }} />
+      <NavegacionInferior vistaActual={vistaActual} setVistaActual={(v: any) => { vibrar(20); setVistaActual(v); }} urgentCount={urgentCount} />
       
       {session && <MenuLateral abierto={menuAbierto} onClose={() => setMenuAbierto(false)} session={session} onCerrarSesion={() => supabase.auth.signOut()} onAbrirGraficos={() => { vibrar(30); setVistaActual('graficos'); }} onAbrirAdmin={() => { vibrar(30); setVistaActual('admin'); }} onAbrirInvitacion={() => { vibrar(30); setMostrarInvitacion(true); }} onAbrirCategorias={() => { vibrar(30); setMostrarCategorias(true); }} />}
 

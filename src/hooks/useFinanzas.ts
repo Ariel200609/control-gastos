@@ -129,16 +129,13 @@ export const useFinanzas = (session: any) => {
   const guardarIngreso = async (ingresoData: Partial<Ingreso>, ingresoAEditar: Ingreso | null = null) => {
     if (!userId) return false;
     try {
-      // LO FORZAMOS A LO BRUTO
       const nuevoIngreso = {
         titulo: ingresoData.titulo,
         monto: Number(ingresoData.monto),
         fecha: ingresoData.fecha || new Date().toISOString().split('T')[0],
-        categoria: 'General' // 🔥 Le clavamos 'General' fijo para que no haya chance de que sea null
+        categoria: ingresoData.categoria || 'General'
       };
 
-      // 👀 NUESTRO ESPÍA: Esto va a imprimir en la consola del navegador qué estamos mandando
-      console.log("Enviando a Supabase este ingreso:", nuevoIngreso);
 
       if (ingresoAEditar) {
         const { error } = await supabase.from('ingresos').update(nuevoIngreso).eq('id', ingresoAEditar.id);
@@ -152,7 +149,6 @@ export const useFinanzas = (session: any) => {
       await fetchData(); 
       return true;
     } catch (error: any) {
-      console.error("Error REAL devuelto por Supabase:", error);
       toast.error(`Fallo al guardar: ${error.message}`);
       return false;
     }

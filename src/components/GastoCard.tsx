@@ -1,5 +1,6 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
-import { Check, Edit3, Trash2, Circle, Repeat } from "lucide-react";
+import { Check, Edit3, Trash2, Circle, Repeat, Copy } from "lucide-react";
 import type { Gasto } from "../types";
 
 interface Props {
@@ -7,14 +8,16 @@ interface Props {
   onToggle: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  onDuplicate?: () => void;
   compacto?: boolean;
 }
 
-export const GastoCard = ({
+export const GastoCard = memo(({
   gasto,
   onToggle,
   onDelete,
   onEdit,
+  onDuplicate,
   compacto = false,
 }: Props) => {
   const estaPagado = gasto.estado === "pagado";
@@ -99,6 +102,13 @@ export const GastoCard = ({
             >
               {estaPagado ? `Pagado el ${fechaFormateada}` : `Vence el ${fechaFormateada}`}
             </span>
+
+            {gasto.created_by_name && (
+              <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[9px] font-black px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shrink-0" title={`Cargado por ${gasto.created_by_name}`}>
+                <span className="w-3.5 h-3.5 bg-gradient-to-br from-eco-bosque to-eco-menta text-white rounded-full flex items-center justify-center text-[7px] font-black">{gasto.created_by_name.charAt(0).toUpperCase()}</span>
+                {!compacto && <span className="truncate max-w-[60px]">{gasto.created_by_name.split(' ')[0]}</span>}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -113,6 +123,15 @@ export const GastoCard = ({
         </span>
 
         <div className="flex items-center gap-1">
+          {onDuplicate && (
+            <button
+              onClick={onDuplicate}
+              className={`text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all ${compacto ? "p-1" : "p-1.5"}`}
+              title="Duplicar"
+            >
+              <Copy size={compacto ? 14 : 16} />
+            </button>
+          )}
           <button
             onClick={onEdit}
             className={`text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all ${compacto ? "p-1" : "p-1.5"}`}
@@ -129,4 +148,4 @@ export const GastoCard = ({
       </div>
     </motion.div>
   );
-};
+});

@@ -1,5 +1,7 @@
-import { Download, ListFilter, Leaf } from 'lucide-react';
+import { Download, ListFilter, Leaf, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { exportarAPdf } from '../utils/exportPdf';
+import { festejarPago } from '../utils/confetti';
 import { DashboardResumen } from './DashboardResumen';
 import { GastoCard } from './GastoCard';
 import { IngresoCard } from './IngresoCard';
@@ -30,7 +32,7 @@ export const PantallaInicio = ({
   categoriaActiva, setCategoriaActiva, busqueda, setBusqueda, filtroEstado, setFiltroEstado, exportarAExcel,
   totales, limitePresupuesto, onEditPresupuesto, onAbrirBoveda,
   setMostrarMenuOrden, vistaCompacta,
-  gastosFiltrados, toggleGasto, setGastoABorrar, setGastoAEditar, setMostrarFormulario,
+  gastosFiltrados, toggleGasto, setGastoABorrar, setGastoAEditar, setMostrarFormulario, onDuplicateGasto,
   ingresosFiltrados, setIngresoAEditar, setMostrarFormularioIngreso, setIngresoABorrar
 }: any) => {
 
@@ -62,8 +64,11 @@ export const PantallaInicio = ({
                   <option value="pendiente">Pendiente</option>
                   <option value="pagado">Pagado</option>
                 </select>
-                <button onClick={exportarAExcel} className="p-3 bg-eco-bosque/10 dark:bg-eco-menta/10 text-eco-bosque dark:text-eco-menta rounded-2xl transition-all hover:bg-eco-bosque/20 hover:scale-105 active:scale-95">
+                <button onClick={exportarAExcel} className="p-3 bg-eco-bosque/10 dark:bg-eco-menta/10 text-eco-bosque dark:text-eco-menta rounded-2xl transition-all hover:bg-eco-bosque/20 hover:scale-105 active:scale-95" title="Exportar a Excel">
                   <Download size={20} />
+                </button>
+                <button onClick={() => exportarAPdf(gastosFiltrados, MESES[mesFiltro - 1])} className="p-3 bg-red-500/10 dark:bg-red-400/10 text-red-600 dark:text-red-400 rounded-2xl transition-all hover:bg-red-500/20 hover:scale-105 active:scale-95" title="Exportar a PDF">
+                  <FileText size={20} />
                 </button>
               </div>
             </>
@@ -80,6 +85,7 @@ export const PantallaInicio = ({
         totalAhorros={totales.totalAhorrosMes} 
         totalAhorrosGlobal={totales.totalAhorrosGlobal}
         saldoBilletera={totales.saldoBilletera}
+        variacionMensual={totales.variacionMensual}
         limitePresupuesto={limitePresupuesto} 
         onEditPresupuesto={onEditPresupuesto} 
         onAbrirBoveda={onAbrirBoveda} 
@@ -144,13 +150,14 @@ export const PantallaInicio = ({
                   <motion.div key={g.id} variants={itemVariants}>
                     <ItemDeslizable 
                       onBorrar={() => setGastoABorrar(g.id)} 
-                      onCompletar={() => toggleGasto(g.id)}
+                      onCompletar={() => { if (g.estado === 'pendiente') festejarPago(); toggleGasto(g.id); }}
                     >
                       <GastoCard 
                         gasto={g} 
-                        onToggle={() => toggleGasto(g.id)} 
+                        onToggle={() => { if (g.estado === 'pendiente') festejarPago(); toggleGasto(g.id); }} 
                         onDelete={() => setGastoABorrar(g.id)} 
                         onEdit={() => { setGastoAEditar(g); setMostrarFormulario(true); }} 
+                        onDuplicate={() => onDuplicateGasto?.(g)}
                         compacto={vistaCompacta} 
                       />
                     </ItemDeslizable>

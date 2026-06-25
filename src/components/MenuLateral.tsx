@@ -77,7 +77,7 @@ export const MenuLateral = ({
               </button>
 
               {/* 3. BOTÓN SECRETO SUPERADMIN */}
-              {userEmail === 'arielmontoya200609@gmail.com' && (
+              {userEmail === import.meta.env.VITE_ADMIN_EMAIL && (
                 <button onClick={() => { onAbrirAdmin(); onClose(); }} className="mt-4 flex items-center gap-4 p-4 rounded-2xl bg-gray-900 dark:bg-black text-white font-bold transition-all text-left shadow-lg border border-gray-800 hover:scale-[1.02] active:scale-[0.98] group">
                   <div className="bg-gray-800 text-blue-400 p-2 rounded-xl group-hover:scale-110 transition-transform">
                     <ShieldAlert size={20} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, DollarSign, Type, Repeat, CreditCard } from 'lucide-react';
 import type { Gasto, Categoria } from '../types';
@@ -14,8 +14,15 @@ interface Props {
 // Categorías de salvavidas por si la base de datos está vacía
 const CATEGORIAS_DEFAULT = ['Supermercado', 'Servicios', 'Transporte', 'Ocio', 'Salud', 'Hogar', 'Educación', 'Otros'];
 
-export const NuevoGastoForm = ({ gastoAEditar, categorias, onGuardar, onCancelar }: Props) => {
+export const NuevoGastoForm = ({ gastos = [], gastoAEditar, categorias, onGuardar, onCancelar }: Props) => {
   
+  // Populares del historial para autocompletar
+  const sugerenciasTitulos = useMemo(() => {
+    const conteo: Record<string, number> = {};
+    gastos.forEach(g => { if (g.titulo) conteo[g.titulo] = (conteo[g.titulo] || 0) + 1; });
+    return Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a]).slice(0, 6);
+  }, [gastos]);
+
   // Si tenemos categorías en la DB las usamos, sino usamos las de por defecto
   const listaCategorias = categorias.length > 0 ? categorias.map(c => c.nombre) : CATEGORIAS_DEFAULT;
 
@@ -80,8 +87,30 @@ export const NuevoGastoForm = ({ gastoAEditar, categorias, onGuardar, onCancelar
               <label className="text-xs font-bold tracking-wider text-gray-500 uppercase mb-2 block">¿Qué pagaste?</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400"><Type size={18} /></div>
-                <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Luz, Internet, Súper..." className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-eco-bosque/20 focus:border-eco-bosque transition-all font-medium" required />
+                <input type="text" list="titulos-sugeridos" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Luz, Internet, Súper..." className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-eco-bosque/20 focus:border-eco-bosque transition-all font-medium" required />
+                <datalist id="titulos-sugeridos">
+                  {sugerenciasTitulos.map(sug => <option key={sug} value={sug} />)}
+                </datalist>
               </div>
+              {sugerenciasTitulos.length > 0 && !gastoAEditar && (
+                <div className="flex flex-wrap gap-1.5 mt-2 pt-1">
+                  <span className="text-[10px] font-bold text-gray-400 self-center mr-1">Populares:</span>
+                  {sugerenciasTitulos.map(sug => (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => {
+                        setTitulo(sug);
+                        const match = gastos.find(g => g.titulo === sug);
+                        if (match) { setCategoria(match.categoria); if (match.monto) setMonto(match.monto.toString()); }
+                      }}
+                      className="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-lg hover:bg-eco-menta/20 hover:text-eco-bosque dark:hover:text-eco-menta transition-colors font-medium border border-gray-200/60 dark:border-gray-700/60 active:scale-95"
+                    >
+                      {sug}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* MONTO Y VENCIMIENTO */}

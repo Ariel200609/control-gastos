@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Calendar, Edit2, Trash2 } from "lucide-react";
 import type { Ingreso } from "../types";
@@ -8,7 +9,7 @@ interface Props {
   onDelete: () => void;
 }
 
-export const IngresoCard = ({ ingreso, onEdit, onDelete }: Props) => {
+export const IngresoCard = memo(({ ingreso, onEdit, onDelete }: Props) => {
   const formatFecha = (fechaStr: string) => {
     const [year, month, day] = fechaStr.split('-');
     const date = new Date(Number(year), Number(month) - 1, Number(day));
@@ -55,4 +56,4 @@ export const IngresoCard = ({ ingreso, onEdit, onDelete }: Props) => {
       </div>
     </motion.div>
   );
-};
+});
