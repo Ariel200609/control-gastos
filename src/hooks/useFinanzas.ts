@@ -193,7 +193,7 @@ export const useFinanzas = (session: any) => {
   const toggleGasto = async (id: string) => {
     const gasto = gastos.find(g => g.id === id);
     if (!gasto) return;
-    const nuevo = gasto.estado === 'pendiente' ? 'pagado' : 'pendiente';
+    const nuevo = String(gasto.estado).toLowerCase() === 'pendiente' ? 'pagado' : 'pendiente';
     setGastos(actuales => actuales.map(g => g.id === id ? { ...g, estado: nuevo } : g));
     await supabase.from('gastos').update({ estado: nuevo }).eq('id', id);
     fetchData(); 

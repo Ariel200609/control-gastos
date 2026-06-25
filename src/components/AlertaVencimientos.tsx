@@ -9,7 +9,9 @@ interface Props {
 }
 
 export const AlertaVencimientos = ({ gastosProximos, onVerGasto }: Props) => {
-  const [cerrado, setCerrado] = useState(false);
+  const [cerrado, setCerrado] = useState(() => {
+    return localStorage.getItem('ecoHogar_alerta_cerrada') === new Date().toDateString();
+  });
   
   if (gastosProximos.length === 0 || cerrado) return null;
 
@@ -47,7 +49,10 @@ export const AlertaVencimientos = ({ gastosProximos, onVerGasto }: Props) => {
             : 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 border-amber-200/50 dark:border-amber-800/30'
         }`}>
           <button 
-            onClick={() => setCerrado(true)} 
+            onClick={() => {
+              setCerrado(true);
+              localStorage.setItem('ecoHogar_alerta_cerrada', new Date().toDateString());
+            }} 
             className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full transition-colors"
           >
             <X size={14} />

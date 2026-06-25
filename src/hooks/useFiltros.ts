@@ -38,7 +38,7 @@ export const useFiltros = (gastos: Gasto[], ingresos: Ingreso[], ahorros: Ahorro
       .filter(g => {
         if (!coincidenciaDeMes(g.fechaVencimiento)) return false;
         if (vistaActual === 'historial') {
-          if (filtroEstado !== 'todos' && g.estado !== filtroEstado) return false;
+          if (filtroEstado !== 'todos' && String(g.estado).toLowerCase() !== filtroEstado.toLowerCase()) return false;
           if (categoriaActiva !== 'Todos' && g.categoria !== categoriaActiva) return false;
           if (busqueda.trim() && !g.titulo.toLowerCase().includes(busqueda.toLowerCase())) return false;
         }
@@ -64,7 +64,7 @@ export const useFiltros = (gastos: Gasto[], ingresos: Ingreso[], ahorros: Ahorro
   const totales = useMemo(() => {
     // Totales del mes en curso (o el filtrado)
     const totalMensual = gastosFiltrados.reduce((total, gasto) => total + gasto.monto, 0);
-    const totalPagado = gastosFiltrados.filter(g => g.estado === 'pagado').reduce((total, gasto) => total + gasto.monto, 0);
+    const totalPagado = gastosFiltrados.filter(g => String(g.estado).toLowerCase() === 'pagado').reduce((total, gasto) => total + gasto.monto, 0);
     const totalPendiente = totalMensual - totalPagado;
     const totalIngresosMes = ingresosFiltrados.reduce((total, ingreso) => total + ingreso.monto, 0);
     const totalAhorrosMes = ahorrosFiltrados.reduce((total, ahorro) => total + ahorro.monto, 0);
@@ -80,7 +80,7 @@ export const useFiltros = (gastos: Gasto[], ingresos: Ingreso[], ahorros: Ahorro
       const gastoMonth = Number(monthStr);
 
       // Si ya lo pagaste, se resta siempre (la plata ya no la tenés)
-      if (gasto.estado === 'pagado') {
+      if (String(gasto.estado).toLowerCase() === 'pagado') {
         return total + (gasto.monto || 0);
       }
 
@@ -126,7 +126,7 @@ export const useFiltros = (gastos: Gasto[], ingresos: Ingreso[], ahorros: Ahorro
 
     return gastos
       .filter(g => {
-        if (g.estado === 'pagado') return false;
+        if (String(g.estado).toLowerCase() === 'pagado') return false;
         const [y, m, d] = g.fechaVencimiento.split('-');
         const fechaVenc = new Date(Number(y), Number(m) - 1, Number(d));
         fechaVenc.setHours(0, 0, 0, 0);
